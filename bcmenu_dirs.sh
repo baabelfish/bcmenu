@@ -1,3 +1,3 @@
 #!/bin/bash
-dirs|tr ' ' '\n'|tac|bcmenu_run
-cd $(bcmenu_result)
+IGNORE='.git'
+find $1 -type d|grep -v "$IGNORE"|awk '{ print length($0), $0|"sort -n" }'|cut -f2- -d' '|bcmenu_run
