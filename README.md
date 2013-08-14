@@ -1,7 +1,7 @@
 fuzzy-cli-finder
 ================
 
-Bcmenu is a fuzzy menu for terminal. It currently comes with a wrapper for opening files
+Bcmenu is a fuzzy menu for command line. It currently comes with a wrapper for opening files
 and navigating back directory stack.
 
 Installation
