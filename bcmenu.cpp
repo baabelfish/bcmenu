@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <sstream>
 
 void readIn(std::vector<std::wstring>& lines);
 void takeInput(const std::vector<std::wstring>& lines);
@@ -30,17 +31,17 @@ int main(int argc, char* argv[]) {
 }
 
 void readIn(std::vector<std::wstring>& lines) {
-    std::wstring temp;
-    while (getline(std::wcin, temp))
-        lines.push_back(temp);
-    // for (auto& x : lines) {
-    //     std::cout << x << std::endl;
-    // }
+    std::string temp;
+    while (getline(std::cin, temp)) {
+        std::wstringstream ws;
+        ws << temp.c_str();
+        lines.push_back(ws.str());
+    }
 }
 
 void takeInput(const std::vector<std::wstring>& lines) {
-    // printLine(L":");
     initCurses();
+    printLine(L":");
     std::vector<size_t> choises;
     std::wstring input;
     std::wstring final_choise;
@@ -79,7 +80,7 @@ void takeInput(const std::vector<std::wstring>& lines) {
                 break;
         }
 
-        move(0, 0);
+        move(0, 1);
         printLine(input + L"<");
         int done = 1;
         choises.clear();
@@ -92,7 +93,7 @@ void takeInput(const std::vector<std::wstring>& lines) {
             }
         }
         if (choise > choises.size() - 1) choise = choises.size() - 1;
-        for (auto i = 0; i < choises.size() && i < getRows(); ++i) {
+        for (auto i = 0; i < choises.size(); ++i) {
             if (i == choise) printLine(L"> " + lines[choises[i]]);
             else printLine(L"  " + lines[choises[i]]);
         }
