@@ -7,7 +7,7 @@
 #include <sstream>
 
 void readIn(std::vector<std::wstring>& lines);
-void takeInput(const std::vector<std::wstring>& lines);
+int takeInput(const std::vector<std::wstring>& lines);
 void initCurses();
 int fetchKey();
 void printLine(std::wstring str);
@@ -26,8 +26,7 @@ int main(int argc, char* argv[]) {
     tempfile = argv[1];
     std::vector<std::wstring> lines;
     readIn(lines);
-    takeInput(lines);
-    return 0;
+    return takeInput(lines);
 }
 
 void readIn(std::vector<std::wstring>& lines) {
@@ -39,7 +38,8 @@ void readIn(std::vector<std::wstring>& lines) {
     }
 }
 
-void takeInput(const std::vector<std::wstring>& lines) {
+int takeInput(const std::vector<std::wstring>& lines) {
+    if (lines.empty()) return 1;
     initCurses();
     printLine(L":");
     std::vector<size_t> choises;
@@ -49,6 +49,12 @@ void takeInput(const std::vector<std::wstring>& lines) {
     int cx, cy;
     bool done = false;
     int choise = 0;
+
+    move(1, 0);
+    printLine(L"i  " + lines[0]);
+    for (size_t i = 1; i < lines.size(); ++i) {
+        printLine(L"  " + lines[i]);
+    }
 
     while (!done) {
         key = fetchKey();
@@ -106,8 +112,7 @@ void takeInput(const std::vector<std::wstring>& lines) {
         myfile << final_choise << std::endl;
         myfile.close();
     }
-    // if (!final_choise.empty())
-    //     std::wcout << final_choise << std::endl;
+    return 0;
 }
 
 int fetchKey() {
