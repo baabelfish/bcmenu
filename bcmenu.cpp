@@ -6,17 +6,40 @@
 #include <cstring>
 #include <sstream>
 
-void readIn(std::vector<std::wstring>& lines);
-int takeInput(const std::vector<std::wstring>& lines);
-void initCurses();
+static std::string tempfile;
+enum Color {
+    Normal = 1
+    , Typeline
+    , TypelinePrefix
+    , Selection
+    , SelectionMark
+    , Count
+};
+static const int DefaultColorsFg[] = {
+    253
+    , 142
+    , 148
+    , 154
+    , 190
+}
+static const int DefaultColorsBg[] = {
+    -1
+    , -1
+    , -1
+    , 246
+    , -1
+}
+
+bool match_straigth(const std::wstring& input, const std::wstring& result);
 int fetchKey();
-void printLine(std::wstring str);
-void printBlank();
 int getCols();
 int getRows();
-bool match_straigth(const std::wstring& input, const std::wstring& result);
-
-static std::string tempfile;
+int takeInput(const std::vector<std::wstring>& lines);
+void initCurses();
+void initPairs();
+void printBlank();
+void printLine(std::wstring str);
+void readIn(std::vector<std::wstring>& lines);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -138,12 +161,7 @@ void initCurses() {
     keypad(stdscr, true);
     use_default_colors();
     start_color();
-    init_pair(225, -1, -1);
-    init_pair(1, 1, 1);
-    init_pair(2, 10, 10);
-    init_pair(3, 3, 3);
-    init_pair(4, 4, 4);
-    init_pair(5, 5, 5);
+    initPairs();
     curs_set(0);
 }
 
@@ -192,4 +210,10 @@ bool match_straigth(const std::wstring& input, const std::wstring& result) {
         if (iinput == input.size()) return true;
     }
     return false;
+}
+
+void initPairs() {
+    for (auto i = 0; i < Color::Count; ++i) {
+        init_pair(i + 1, DefaultColorsFg[i], -DefaultColorsBg[i]);
+    }
 }
