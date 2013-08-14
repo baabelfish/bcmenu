@@ -11,10 +11,11 @@ Run `./install.sh` if you dare. (FIXME)
 Usage
 -----
 
-Opening a file from terminal: `bcmenu_files && vim $(finderresult.sh)`
+#### Opening a file from terminal: 
+```bcmenu_files && vim $(finderresult.sh)```
 
-Add this line to your `.zshrc` to engage the previous command with `C-t`:
-`bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu\_result)\n'`
+#### Add the following to your `.zshrc` to engage the previous command with `C-t`:
+```bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu\_result)\n'```
 
 Keybindings
 -----------
