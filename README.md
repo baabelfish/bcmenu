@@ -36,3 +36,4 @@ TODO
 - Make characters customizable.
 - Add bookmarks.
 - Write more match functions (including a proper fuzzy match).
+- Remember terminal screen.
