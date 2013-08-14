@@ -1,8 +1,8 @@
 fuzzy-cli-finder
 ================
 
-Bcmenu is a fuzzy menu for command line. It currently comes with a wrapper for opening files
-and navigating back directory stack.
+Bcmenu is a fuzzy menu for command line. It currently comes with a wrapper for
+opening files, navigating folders and going back directory stack.
 
 Installation
 ------------
@@ -16,6 +16,9 @@ Usage
 
 #### Add the following to your `.zshrc` to engage the previous command with `C-t`:
 ```bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu\_result)\n'```
+
+#### This one gets you to the directory you want:
+```bindkey -s '^F' '^qbcmenu_dirs && cd "$(bcmenu_result)"\n'```
 
 Keybindings
 -----------
@@ -31,3 +34,4 @@ TODO
 - Fix pipe and get rid of bcmenu\_result.
 - Add colors.
 - Make characters customizable.
+- Add bookmarks
