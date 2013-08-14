@@ -1,4 +1,4 @@
 fuzzy-cli-finder
 ================
 
-fuzzy-cli-finder
+./filefinder && vim $(finderresult.sh)
