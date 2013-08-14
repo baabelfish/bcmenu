@@ -34,4 +34,5 @@ TODO
 - Fix pipe and get rid of bcmenu\_result.
 - Add colors.
 - Make characters customizable.
-- Add bookmarks
+- Add bookmarks.
+- Write more match functions (including a proper fuzzy match).
