@@ -79,6 +79,9 @@ int takeInput(const std::vector<std::wstring>& lines) {
             case 16:
                 if (choise > 0) --choise;
                 break;
+            case 23:
+                input.clear();
+                break;
             case -1:
                 break;
             default:
