@@ -15,7 +15,7 @@ Usage
 ```bcmenu_files && vim $(finderresult.sh)```
 
 #### Add the following to your `.zshrc` to engage the previous command with `C-t`:
-```bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu\_result)\n'```
+```bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu_result)\n'```
 
 #### This one gets you to the directory you want:
 ```bindkey -s '^F' '^qbcmenu_dirs && cd "$(bcmenu_result)"\n'```
