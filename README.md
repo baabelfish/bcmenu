@@ -10,22 +10,20 @@ Run `./install.sh` if you dare. (FIXME)
 
 Usage
 -----
-# Setup
 
-## How to open a file from terminal. You can naturally change vim to any other command.
-`bcmenu_files && vim $(finderresult.sh)`
+Opening a file from terminal: `bcmenu_files && vim $(finderresult.sh)`
 
-## Add this line to your `.zshrc` to engage the previous command with `C-t`
+Add this line to your `.zshrc` to engage the previous command with `C-t`:
 `bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu\_result)\n'`
 
-# Keybindings
+Keybindings
+-----------
 
 - `Enter` Saves the result and exits the program.
 - `C-n` Next match.
 - `C-p` Previous match.
 - `C-w` Clears the search.
 - `C-c` Normal interrupt (result is not saved).
-
 
 TODO
 ----
