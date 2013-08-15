@@ -68,47 +68,48 @@ int main(int argc, char* argv[]) {
 }
 
 bool parseArguments(int argc, char* argv[]) {
-    if (argc < 2 || !std::strcmp("1234", argv[1])) {
-        std::cerr << "You should use bcmenu instead of this." << std::endl;
+    if (argc < 2 || std::strcmp("1234", argv[1]) != 0) {
+        std::cerr << argv[1] << std::endl;
+        // std::cerr << "You should use bcmenu instead of this." << std::endl;
         return false;
     }
     for (auto i = 2; i < argc; ++i) {
-        if (std::strcmp(argv[i], "--ignore-case")) {
+        if (std::strcmp(argv[i], "--ignore-case") == 0) {
             g_case = TypeCase::Ignore;
         }
-        else if (std::strcmp(argv[i], "--smart-case")) {
+        else if (std::strcmp(argv[i], "--smart-case") == 0) {
             g_case = TypeCase::Smart;
         }
-        else if (std::strcmp(argv[i], "--exact-case")) {
+        else if (std::strcmp(argv[i], "--exact-case") == 0) {
             g_case = TypeCase::Exact;
         }
-        else if (std::strcmp(argv[i], "-h")) {
+        else if (std::strcmp(argv[i], "-h") == 0) {
             std::cout << g_helptext << std::endl;
             return false;
         }
-        else if (std::strcmp(argv[i], "--prompt")) {
+        else if (std::strcmp(argv[i], "--prompt") == 0) {
         }
-        else if (std::strcmp(argv[i], "--focus-prefix")) {
+        else if (std::strcmp(argv[i], "--focus-prefix") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-active-fg")) {
+        else if (std::strcmp(argv[i], "--color-active-fg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-focused-fg")) {
+        else if (std::strcmp(argv[i], "--color-focused-fg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-normal-fg")) {
+        else if (std::strcmp(argv[i], "--color-normal-fg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-prefix-fg")) {
+        else if (std::strcmp(argv[i], "--color-prefix-fg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-input-fg")) {
+        else if (std::strcmp(argv[i], "--color-input-fg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-active-bg")) {
+        else if (std::strcmp(argv[i], "--color-active-bg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-focused-bg")) {
+        else if (std::strcmp(argv[i], "--color-focused-bg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-normal-bg")) {
+        else if (std::strcmp(argv[i], "--color-normal-bg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-prefix-bg")) {
+        else if (std::strcmp(argv[i], "--color-prefix-bg") == 0) {
         }
-        else if (std::strcmp(argv[i], "--color-input-bg")) {
+        else if (std::strcmp(argv[i], "--color-input-bg") == 0) {
         }
         else {
             std::cout << g_helptext << std::endl;

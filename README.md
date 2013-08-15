@@ -6,20 +6,41 @@ opening files, navigating folders and going back directory stack.
 
 Installation
 ------------
-Run `./install.sh` if you dare. (FIXME)
+
+##### Compile bmenu\_exe
+``
+make
+``
+
+#####
 
 Usage
 -----
 
+This basically works as the same as [dmenu](http://tools.suckless.org/dmenu/)
+but has fuzzy matching and it's for the terminal.
+
+The next bit gives a list of options to bcmenu and it let's you choose one
+that's returned to stdout after the program stops running.
+``
+$ echo "option1\nnoption2"|bcmenu
+``
+
+##### Opening a file in vim
+``
+vim $(find|bcmenu)
+``
+
+<!--(
 #### Opening a file from terminal: 
-```bcmenu_files && vim $(finderresult.sh)```
+``````
 
 #### Add the following to your `.zshrc` to engage the previous command with `C-t`:
 ```bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu_result)\n'```
 
 #### This one gets you to the directory you want:
 ```bindkey -s '^F' '^qbcmenu_dirs && cd "$(bcmenu_result)"\n'```
-
+)-->
 Keybindings
 -----------
 
@@ -37,5 +58,9 @@ TODO
 - Write more match functions (including a proper fuzzy match).
 - Remember terminal screen.
 
-### Fixed
+### Done
 - Fix pipe and get rid of bcmenu\_result.
+
+Similar software
+----------------
+[slmenu](https://bitbucket.org/rafaelgg/slmenu)
