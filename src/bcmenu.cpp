@@ -68,7 +68,10 @@ int main(int argc, char* argv[]) {
 }
 
 bool parseArguments(int argc, char* argv[]) {
-    if (argc < 2) return false;
+    if (argc < 2 || !std::strcmp("1234", argv[1])) {
+        std::cerr << "You should use bcmenu instead of this." << std::endl;
+        return false;
+    }
     for (auto i = 2; i < argc; ++i) {
         if (std::strcmp(argv[i], "--ignore-case")) {
             g_case = TypeCase::Ignore;
@@ -164,8 +167,8 @@ int takeInput(const std::vector<std::wstring>& lines) {
             case 127:
                 if (!input.empty()) input = input.substr(0, input.size() - 1);
                 break;
-            case '\n':
             case '\r':
+            case '\n':
                 if (!choises.empty() && !lines.empty() && choise < choises.size())
                     final_choise = lines[choises[choise]];
                 done = true;
