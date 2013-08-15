@@ -69,8 +69,7 @@ int main(int argc, char* argv[]) {
 
 bool parseArguments(int argc, char* argv[]) {
     if (argc < 2 || std::strcmp("1234", argv[1]) != 0) {
-        std::cerr << argv[1] << std::endl;
-        // std::cerr << "You should use bcmenu instead of this." << std::endl;
+        std::cerr << "You should use bcmenu instead of this." << std::endl;
         return false;
     }
     for (auto i = 2; i < argc; ++i) {
