@@ -1,3 +1,4 @@
 #!/bin/bash
-dirs|tr ' ' '\n'|tac|bcmenu_run
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+dirs|tr ' ' '\n'|tac|$DIR/../bcmenu_run
 cd $(bcmenu_result)
