@@ -38,7 +38,7 @@ static const int DEFAULT_OFFSET = 226;
 static const int COLOR_MODIFIER = 15;
 }
 static const std::string g_helptext =
-"pippeli\
+"Tämä on jelppiteksti\
 ";
 
 bool parseArguments(int argc, char* argv[]);
@@ -59,14 +59,12 @@ void printLine(std::wstring str);
 void readIn(std::vector<std::wstring>& lines);
 
 int main(int argc, char* argv[]) {
-    if (!parseArguments(argc, argv)) {
-        std::cerr << "Give the bloody file. Idiot." << std::endl;
-        return 1;
-    }
+    if (!parseArguments(argc, argv)) return 1;
     g_tempfile = argv[1];
     std::vector<std::wstring> lines;
     readIn(lines);
-    return takeInput(lines);
+    bool rval = takeInput(lines);
+    return rval;
 }
 
 bool parseArguments(int argc, char* argv[]) {
@@ -108,6 +106,10 @@ bool parseArguments(int argc, char* argv[]) {
         else if (std::strcmp(argv[i], "--color-prefix-bg")) {
         }
         else if (std::strcmp(argv[i], "--color-input-bg")) {
+        }
+        else {
+            std::cout << g_helptext << std::endl;
+            return false;
         }
     }
     return true;
@@ -164,7 +166,8 @@ int takeInput(const std::vector<std::wstring>& lines) {
                 break;
             case '\n':
             case '\r':
-                final_choise = lines[choises[choise]];
+                if (!choises.empty() && !lines.empty() && choise < choises.size())
+                    final_choise = lines[choises[choise]];
                 done = true;
                 break;
             case 14:
@@ -214,14 +217,10 @@ int takeInput(const std::vector<std::wstring>& lines) {
             move(printline++, 0);
             printBlank();
         }
+        refresh();
     }
     endwin();
-    std::wofstream myfile;
-    myfile.open(g_tempfile);
-    if (myfile.is_open()) {
-        myfile << final_choise << std::endl;
-        myfile.close();
-    }
+    std::wcerr << final_choise;
     return 0;
 }
 

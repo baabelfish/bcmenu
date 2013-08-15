@@ -3,4 +3,6 @@ if [[ ! -e ~/.cache/fcf ]]; then
     mkdir -p ~/.cache/fcf
 fi
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-$DIR/bcmenu ~/.cache/fcf/temp $*
+# $DIR/bcmenu ~/.cache/fcf/temp $*
+# ./bcmenu ~/.cache/fcf/temp $*
+$DIR/bcmenu ~/.cache/fcf/temp $* 3>&2 2>&1 1>&3
