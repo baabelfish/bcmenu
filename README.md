@@ -6,11 +6,8 @@ opening files, navigating folders and going back directory stack.
 
 Installation
 ------------
-
-##### Compile bmenu\_exe
-``
-make
-``
+First you should compile bcmenu\_exe with ``make``. After that you should move
+bcmenu and bcmenu\_exe to your preferred directory for execution.
 
 #####
 
