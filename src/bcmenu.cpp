@@ -6,7 +6,15 @@
 #include <cstring>
 #include <sstream>
 
-static std::string tempfile;
+enum class TypeCase {
+    Exact = 0
+    , Ignore
+    , Smart
+};
+
+static std::string g_tempfile;
+static TypeCase g_case = TypeCase::Exact;
+
 namespace Color {
 static const int DEFAULT = 225;
 static const int TRANSPARENT = -1; // only for background
@@ -29,7 +37,11 @@ static const int BRIGHT_WHITE = 7 + 8;
 static const int DEFAULT_OFFSET = 226;
 static const int COLOR_MODIFIER = 15;
 }
+static const std::string g_helptext =
+"pippeli\
+";
 
+bool parseArguments(int argc, char* argv[]);
 void setColor(int fg, int bg);
 void attrReset();
 void attrBold();
@@ -47,14 +59,58 @@ void printLine(std::wstring str);
 void readIn(std::vector<std::wstring>& lines);
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
+    if (!parseArguments(argc, argv)) {
         std::cerr << "Give the bloody file. Idiot." << std::endl;
         return 1;
     }
-    tempfile = argv[1];
+    g_tempfile = argv[1];
     std::vector<std::wstring> lines;
     readIn(lines);
     return takeInput(lines);
+}
+
+bool parseArguments(int argc, char* argv[]) {
+    if (argc < 2) return false;
+    for (auto i = 2; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--ignore-case")) {
+            g_case = TypeCase::Ignore;
+        }
+        else if (std::strcmp(argv[i], "--smart-case")) {
+            g_case = TypeCase::Smart;
+        }
+        else if (std::strcmp(argv[i], "--exact-case")) {
+            g_case = TypeCase::Exact;
+        }
+        else if (std::strcmp(argv[i], "-h")) {
+            std::cout << g_helptext << std::endl;
+            return false;
+        }
+        else if (std::strcmp(argv[i], "--prompt")) {
+        }
+        else if (std::strcmp(argv[i], "--focus-prefix")) {
+        }
+        else if (std::strcmp(argv[i], "--color-active-fg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-focused-fg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-normal-fg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-prefix-fg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-input-fg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-active-bg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-focused-bg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-normal-bg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-prefix-bg")) {
+        }
+        else if (std::strcmp(argv[i], "--color-input-bg")) {
+        }
+    }
+    return true;
 }
 
 void readIn(std::vector<std::wstring>& lines) {
@@ -161,7 +217,7 @@ int takeInput(const std::vector<std::wstring>& lines) {
     }
     endwin();
     std::wofstream myfile;
-    myfile.open(tempfile);
+    myfile.open(g_tempfile);
     if (myfile.is_open()) {
         myfile << final_choise << std::endl;
         myfile.close();
@@ -239,12 +295,6 @@ bool matchStraight(const std::wstring& input, const std::wstring& result) {
     }
     return false;
 }
-//
-// void initPairs() {
-//     for (auto i = 0; i < Color::Count; ++i) {
-//         init_pair(i + 1, DefaultColorsFg[i], DefaultColorsBg[i]);
-//     }
-// }
 
 void setColor(int foreground, int background) {
     if (background == -1) {

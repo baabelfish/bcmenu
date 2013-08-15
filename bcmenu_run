@@ -1,0 +1,6 @@
+#!/bin/bash
+if [[ ! -e ~/.cache/fcf ]]; then
+    mkdir -p ~/.cache/fcf
+fi
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+$DIR/bcmenu ~/.cache/fcf/temp $*
