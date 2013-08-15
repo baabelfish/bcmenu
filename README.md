@@ -31,7 +31,7 @@ Keybindings
 
 TODO
 ----
-- Fix pipe and get rid of bcmenu\_result.
+- <strike>Fix pipe and get rid of bcmenu\_result.</strike>
 - Add colors.
 - Make characters customizable.
 - Add bookmarks.

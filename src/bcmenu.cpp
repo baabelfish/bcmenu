@@ -193,9 +193,6 @@ int takeInput(const std::vector<std::wstring>& lines) {
         int done = 1;
         choises.clear();
         for (size_t i = 0; i < lines.size(); ++i) {
-            // if (lines[i].find(input) != -1) {
-            //     choises.push_back(i);
-            // }
             if (matchStraight(input, lines[i])) {
                 choises.push_back(i);
             }
@@ -319,7 +316,6 @@ void initPairs() {
 }
 
 void attrReset() {
-    // use_default_colors();
     attron(COLOR_PAIR(Color::DEFAULT));
     attroff(A_BLINK);
     attroff(A_UNDERLINE);
