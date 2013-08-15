@@ -31,9 +31,11 @@ Keybindings
 
 TODO
 ----
-- <strike>Fix pipe and get rid of bcmenu\_result.</strike>
 - Add colors.
 - Make characters customizable.
 - Add bookmarks.
 - Write more match functions (including a proper fuzzy match).
 - Remember terminal screen.
+
+### Fixed
+- Fix pipe and get rid of bcmenu\_result.
