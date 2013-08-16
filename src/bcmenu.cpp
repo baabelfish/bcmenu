@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <locale>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -18,6 +19,7 @@ enum class TypeCase {
     , Smart
 };
 
+static bool g_has_upper = false;
 static std::string g_tempfile;
 static std::wstring g_prompt;
 static TypeCase g_case = TypeCase::Exact;
@@ -65,6 +67,8 @@ void initPairs();
 void printBlank();
 void printLine(std::wstring str);
 void readIn(std::vector<std::wstring>& lines);
+void printOptions(std::vector<std::wstring>& options, int line_top, int line_bottom
+        , int selected);
 
 int main(int argc, char* argv[]) {
     int re = parseArguments(argc, argv);
@@ -198,6 +202,16 @@ int takeInput(const std::vector<std::wstring>& lines) {
                 break;
         }
 
+        if (g_case == TypeCase::Smart) {
+            g_has_upper = false;
+            for (auto& x : input) {
+                if (isupper(x)) {
+                    g_has_upper = true;
+                    break;
+                }
+            }
+        }
+
         move(0, 0);
         printline = 1;
         setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
@@ -306,6 +320,9 @@ bool matchStraight(const std::wstring& input, const std::wstring& result) {
 
     size_t iinput = 0;
     for (auto i = 0; i < result.size(); ++i) {
+        wchar_t a = input[iinput];
+        wchar_t b = result[i];
+    // if (g_case == TypeCase::Ignore
         if (input[iinput] == result[i]) ++iinput;
         if (iinput == input.size()) return true;
     }
@@ -354,3 +371,7 @@ void attrBlink() {
     attron(A_BLINK);
 }
 
+void printOptions(std::vector<std::wstring>& options, int line_top, int line_bottom
+        , int selected) {
+
+}
