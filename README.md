@@ -54,6 +54,7 @@ TODO
 - Add bookmarks.
 - Write more match functions (including a proper fuzzy match).
 - Remember terminal screen.
+- Show selected characters underlined in search.
 
 ### Done
 - Fix pipe and get rid of bcmenu\_result.

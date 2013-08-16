@@ -5,7 +5,13 @@
 #include <vector>
 #include <cstring>
 #include <sstream>
+#include "aux.hpp"
 
+enum class MatchAlgorithm {
+    Exact
+    , SimpleFuzzy
+    , Fuzzy
+};
 enum class TypeCase {
     Exact = 0
     , Ignore
@@ -13,7 +19,9 @@ enum class TypeCase {
 };
 
 static std::string g_tempfile;
+static std::wstring g_prompt;
 static TypeCase g_case = TypeCase::Exact;
+static MatchAlgorithm g_algorithm;
 
 namespace Color {
 static const int DEFAULT = 225;
@@ -41,7 +49,7 @@ static const std::string g_helptext =
 "Tämä on jelppiteksti\
 ";
 
-bool parseArguments(int argc, char* argv[]);
+int parseArguments(int argc, char* argv[]);
 void setColor(int fg, int bg);
 void attrReset();
 void attrBold();
@@ -59,7 +67,11 @@ void printLine(std::wstring str);
 void readIn(std::vector<std::wstring>& lines);
 
 int main(int argc, char* argv[]) {
-    if (!parseArguments(argc, argv)) return 1;
+    int re = parseArguments(argc, argv);
+    if (re == 2) std::cout << g_helptext << std::endl;
+    if (re != 0) {
+        return 1;
+    }
     g_tempfile = argv[1];
     std::vector<std::wstring> lines;
     readIn(lines);
@@ -67,11 +79,14 @@ int main(int argc, char* argv[]) {
     return rval;
 }
 
-bool parseArguments(int argc, char* argv[]) {
+int parseArguments(int argc, char* argv[]) {
     if (argc < 2 || std::strcmp("1234", argv[1]) != 0) {
         std::cerr << "You should use bcmenu instead of this." << std::endl;
-        return false;
+        return 1;
     }
+
+    std::vector<std::string> options;
+
     for (auto i = 2; i < argc; ++i) {
         if (std::strcmp(argv[i], "--ignore-case") == 0) {
             g_case = TypeCase::Ignore;
@@ -82,11 +97,21 @@ bool parseArguments(int argc, char* argv[]) {
         else if (std::strcmp(argv[i], "--exact-case") == 0) {
             g_case = TypeCase::Exact;
         }
+        else if (std::strcmp(argv[i], "--exact") == 0) {
+            g_algorithm = MatchAlgorithm::Exact;
+        }
+        else if (std::strcmp(argv[i], "--fuzzy") == 0) {
+            g_algorithm = MatchAlgorithm::Fuzzy;
+        }
+        else if (std::strcmp(argv[i], "--simplyfuzzy") == 0) {
+            g_algorithm = MatchAlgorithm::SimpleFuzzy;
+        }
         else if (std::strcmp(argv[i], "-h") == 0) {
-            std::cout << g_helptext << std::endl;
-            return false;
+            return 2;
         }
         else if (std::strcmp(argv[i], "--prompt") == 0) {
+            if (!aux::parseNext(argc, argv, i, 1, options) || options.size() != 1) return 2;
+            else g_prompt = aux::stringToWideString(options[0]);
         }
         else if (std::strcmp(argv[i], "--focus-prefix") == 0) {
         }
@@ -111,20 +136,17 @@ bool parseArguments(int argc, char* argv[]) {
         else if (std::strcmp(argv[i], "--color-input-bg") == 0) {
         }
         else {
-            std::cout << g_helptext << std::endl;
-            return false;
+            return 2;
         }
     }
-    return true;
+    return 0;
 }
 
 void readIn(std::vector<std::wstring>& lines) {
     std::string temp;
     while (getline(std::cin, temp)) {
         if (temp == ".") continue;
-        std::wstringstream ws;
-        ws << temp.c_str();
-        lines.push_back(ws.str());
+        lines.push_back(aux::stringToWideString(temp));
     }
 }
 
@@ -132,7 +154,7 @@ int takeInput(const std::vector<std::wstring>& lines) {
     if (lines.empty()) return 1;
     initCurses();
     setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
-    printLine(L":<");
+    printLine(g_prompt + L"<");
     std::vector<size_t> choises;
     std::wstring input;
     std::wstring final_choise;
@@ -141,19 +163,6 @@ int takeInput(const std::vector<std::wstring>& lines) {
     bool done = false;
     int choise = 0;
     int printline = 2;
-
-    move(1, 0);
-    setColor(Color::BRIGHT_YELLOW, Color::TRANSPARENT);
-    printLine(L">  " + lines[0]);
-    setColor(Color::WHITE, Color::TRANSPARENT);
-    for (size_t i = 1; i < lines.size(); ++i) {
-        move(printline++, 0);
-        printLine(L"  " + lines[i]);
-    }
-    // for (auto i = getRows() - done; i > 0; --i) {
-    //     move(printline++, 0);
-    //     printBlank();
-    // }
 
     while (!done) {
         key = fetchKey();
@@ -192,7 +201,7 @@ int takeInput(const std::vector<std::wstring>& lines) {
         move(0, 0);
         printline = 1;
         setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
-        printLine(L":" + input + L"<");
+        printLine(g_prompt + input + L"<");
         int done = 1;
         choises.clear();
         for (size_t i = 0; i < lines.size(); ++i) {
@@ -287,6 +296,14 @@ int getRows() {
 }
 
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
+    // int iinput = input.size() - 1;
+    // if (iinput <= 0) return false;
+    // for (int i = result.size() - 1; i >= 0; --i) {
+    //     if (input[iinput] == result[i]) --iinput;
+    //     if (iinput <= 0) return true;
+    // }
+    // return false;
+
     size_t iinput = 0;
     for (auto i = 0; i < result.size(); ++i) {
         if (input[iinput] == result[i]) ++iinput;
