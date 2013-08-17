@@ -1,8 +1,8 @@
 bcmenu
 ======
 
-Bcmenu is a fuzzy menu for command line. It currently comes with a wrapper for
-opening files, navigating folders and going back directory stack.
+Bcmenu is a fuzzy menu for the command line. Pipe stuff in and get your
+selection back, you know the drill.
 
 Installation
 ------------
