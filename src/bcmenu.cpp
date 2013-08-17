@@ -1,5 +1,6 @@
 #include <curses.h>
 #include <deque>
+#include <set>
 #include <locale>
 #include <fstream>
 #include <iostream>
@@ -44,7 +45,7 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
         , const std::deque<std::wstring>& lines);
 void printInput(int line, const std::wstring& input);
 void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
-        , int line_top, int line_bottom, int selected);
+        , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
 
 int main(int argc, char* argv[]) {
     int re = parseArguments(argc, argv);
@@ -134,27 +135,27 @@ int takeInput(const std::deque<std::wstring>& lines) {
     if (lines.empty()) return 1;
     initCurses();
     std::deque<size_t> choises;
+    std::set<int> selected;
     std::wstring input;
     std::wstring final_choise;
     int key = 0;
     bool done = false;
+    bool interrupt = false;
     int choise = 0;
 
     while (!done) {
         if (choise > choises.size() - 1) choise = choises.size() - 1;
         matchInputToLines(input, choises, lines);
         printInput(0, input);
-        printOptions(lines, choises, 1, aux::getRows(), choise);
+        printOptions(lines, choises, 1, aux::getRows(), choise, selected);
         refresh();
 
         key = fetchKey();
-        if (key == 3) {
-            done = true;
-        }
         switch (key) {
             // case KEY_ESC:
-            case 9:
+            case 3:
                 done = true;
+                interrupt = true;
                 break;
             case KEY_BACKSPACE:
             case 127:
@@ -172,6 +173,13 @@ int takeInput(const std::deque<std::wstring>& lines) {
             case 16:
                 if (choise > 0) --choise;
                 break;
+            case 15:
+                selected.insert(choises[choise]);
+                break;
+            case 9:
+                if (selected.find(choise) != selected.end())
+                    selected.erase(selected.find(choise));
+                break;
             case 23:
                 choise = 0;
                 input.clear();
@@ -185,7 +193,12 @@ int takeInput(const std::deque<std::wstring>& lines) {
     }
 
     endwin();
-    std::wcerr << final_choise;
+    if (!interrupt) {
+        if (!selected.empty())
+            for (auto it = selected.rbegin(); it != selected.rend(); ++it)
+                std::wcerr << lines[*it] << std::endl;
+        else std::wcerr << final_choise;
+    }
     return 0;
 }
 
@@ -291,13 +304,18 @@ void printInput(int line, const std::wstring& input) {
 }
 
 void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
-        , int line_top, int line_bottom, int selected) {
+        , int line_top, int line_bottom, int selected, const std::set<int>& multiple) {
     int printline = 1;
     for (auto i = 0; i < options.size() && printline < line_bottom - line_top; ++i) {
         move(printline++, 0);
         if (i == selected) {
-            aux::setColor(Color::BRIGHT_YELLOW, Color::TRANSPARENT);
-            printLine(L"> " + lines[options[i]]);
+            aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
+            if (multiple.find(options[i]) != multiple.end()) printLine(L"*>" + lines[options[i]]);
+            else printLine(L"> " + lines[options[i]]);
+        }
+        else if (multiple.find(options[i]) != multiple.end()) {
+            aux::setColor(Color::GREEN, Color::TRANSPARENT);
+            printLine(L"* " + lines[options[i]]);
         }
         else {
             aux::setColor(Color::WHITE, Color::TRANSPARENT);
