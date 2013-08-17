@@ -69,8 +69,11 @@ void printBlank();
 void printLine(std::wstring str);
 void readIn(std::deque<std::wstring>& lines);
 bool matchCharacter(wchar_t a, wchar_t b);
-void printOptions(std::deque<std::wstring>& options, int line_top, int line_bottom
-        , int selected);
+void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
+        , const std::deque<std::wstring>& lines);
+void printInput(int line, const std::wstring& input);
+void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
+        , int line_top, int line_bottom, int selected);
 
 int main(int argc, char* argv[]) {
     int re = parseArguments(argc, argv);
@@ -159,24 +162,28 @@ void readIn(std::deque<std::wstring>& lines) {
 int takeInput(const std::deque<std::wstring>& lines) {
     if (lines.empty()) return 1;
     initCurses();
-    setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
-    printLine(g_prompt + L"<");
     std::deque<size_t> choises;
     std::wstring input;
     std::wstring final_choise;
     int key = 0;
-    int cx, cy;
     bool done = false;
     int choise = 0;
-    int printline = 2;
 
     while (!done) {
+        if (choise > choises.size() - 1) choise = choises.size() - 1;
+        matchInputToLines(input, choises, lines);
+        printInput(0, input);
+        printOptions(lines, choises, 1, getRows(), choise);
+        refresh();
+
         key = fetchKey();
         if (key == 3) {
             done = true;
         }
         switch (key) {
+            // case KEY_ESC:
             case 9:
+                done = true;
                 break;
             case KEY_BACKSPACE:
             case 127:
@@ -189,7 +196,7 @@ int takeInput(const std::deque<std::wstring>& lines) {
                 done = true;
                 break;
             case 14:
-                if (choise < choises.size() - 1) ++choise;
+                if ((unsigned)choise < choises.size() - 1) ++choise;
                 break;
             case 16:
                 if (choise > 0) --choise;
@@ -204,50 +211,8 @@ int takeInput(const std::deque<std::wstring>& lines) {
                 input += key;
                 break;
         }
-
-        if (g_case == TypeCase::Smart) {
-            g_has_upper = false;
-            for (auto& x : input) {
-                if (isupper(x)) {
-                    g_has_upper = true;
-                    break;
-                }
-            }
-        }
-
-        move(0, 0);
-        printline = 1;
-        setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
-        printLine(g_prompt + input + L"<");
-        int done = 1;
-        choises.clear();
-        for (size_t i = 0; i < lines.size(); ++i) {
-            if (lines[i].find(input) != -1) {
-                choises.push_front(i);
-            }
-            else if (matchStraight(input, lines[i])) {
-                choises.push_back(i);
-            }
-        }
-        if (choise > choises.size() - 1) choise = choises.size() - 1;
-        for (auto i = 0; i < choises.size(); ++i) {
-            move(printline++, 0);
-            if (i == choise) {
-                setColor(Color::BRIGHT_YELLOW, Color::TRANSPARENT);
-                printLine(L"> " + lines[choises[i]]);
-            }
-            else {
-                setColor(Color::WHITE, Color::TRANSPARENT);
-                printLine(L"  " + lines[choises[i]]);
-            }
-        }
-        setColor(Color::WHITE, Color::TRANSPARENT);
-        for (auto i = getRows() - done; i > 0; --i) {
-            move(printline++, 0);
-            printBlank();
-        }
-        refresh();
     }
+
     endwin();
     std::wcerr << final_choise;
     return 0;
@@ -279,7 +244,7 @@ void initCurses() {
 
 void printLine(std::wstring str) {
     int cols = getCols();
-    if (str.size() > cols) {
+    if (str.size() > (unsigned)cols) {
         str = str.substr(0, getCols());
     }
     else {
@@ -372,7 +337,52 @@ bool matchCharacter(wchar_t a, wchar_t b) {
     else return a == b;
 }
 
-void printOptions(std::deque<std::wstring>& options, int line_top, int line_bottom
-        , int selected) {
+void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
+        , const std::deque<std::wstring>& lines) {
+    if (g_case == TypeCase::Smart) {
+        g_has_upper = false;
+        for (auto& x : input) {
+            if (isupper(x)) {
+                g_has_upper = true;
+                break;
+            }
+        }
+    }
 
+    choises.clear();
+    for (size_t i = 0; i < lines.size(); ++i) {
+        if (lines[i].find(input) != -1) {
+            choises.push_front(i);
+        }
+        else if (matchStraight(input, lines[i])) {
+            choises.push_back(i);
+        }
+    }
+}
+
+void printInput(int line, const std::wstring& input) {
+    move(line, 0);
+    setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
+    printLine(g_prompt + input + L"<");
+}
+
+void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
+        , int line_top, int line_bottom, int selected) {
+    int printline = 1;
+    for (auto i = 0; i < options.size() && printline < line_bottom - line_top; ++i) {
+        move(printline++, 0);
+        if (i == selected) {
+            setColor(Color::BRIGHT_YELLOW, Color::TRANSPARENT);
+            printLine(L"> " + lines[options[i]]);
+        }
+        else {
+            setColor(Color::WHITE, Color::TRANSPARENT);
+            printLine(L"  " + lines[options[i]]);
+        }
+    }
+    setColor(Color::WHITE, Color::TRANSPARENT);
+    for (auto i = printline; i < line_bottom - line_top; ++i) {
+        move(printline++, 0);
+        printBlank();
+    }
 }
