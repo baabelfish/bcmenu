@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <deque>
 #include <locale>
 #include <fstream>
 #include <iostream>
@@ -61,14 +62,14 @@ bool matchStraight(const std::wstring& input, const std::wstring& result);
 int fetchKey();
 int getCols();
 int getRows();
-int takeInput(const std::vector<std::wstring>& lines);
+int takeInput(const std::deque<std::wstring>& lines);
 void initCurses();
 void initPairs();
 void printBlank();
 void printLine(std::wstring str);
-void readIn(std::vector<std::wstring>& lines);
+void readIn(std::deque<std::wstring>& lines);
 bool matchCharacter(wchar_t a, wchar_t b);
-void printOptions(std::vector<std::wstring>& options, int line_top, int line_bottom
+void printOptions(std::deque<std::wstring>& options, int line_top, int line_bottom
         , int selected);
 
 int main(int argc, char* argv[]) {
@@ -78,7 +79,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     g_tempfile = argv[1];
-    std::vector<std::wstring> lines;
+    std::deque<std::wstring> lines;
     readIn(lines);
     bool rval = takeInput(lines);
     return rval;
@@ -90,7 +91,7 @@ int parseArguments(int argc, char* argv[]) {
         return 1;
     }
 
-    std::vector<std::string> options;
+    std::deque<std::string> options;
 
     for (auto i = 2; i < argc; ++i) {
         if (std::strcmp(argv[i], "--ignore-case") == 0) {
@@ -147,20 +148,20 @@ int parseArguments(int argc, char* argv[]) {
     return 0;
 }
 
-void readIn(std::vector<std::wstring>& lines) {
+void readIn(std::deque<std::wstring>& lines) {
     std::string temp;
     while (getline(std::cin, temp)) {
         if (temp == ".") continue;
-        lines.push_back(aux::stringToWideString(temp));
+        lines.push_front(aux::stringToWideString(temp));
     }
 }
 
-int takeInput(const std::vector<std::wstring>& lines) {
+int takeInput(const std::deque<std::wstring>& lines) {
     if (lines.empty()) return 1;
     initCurses();
     setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
     printLine(g_prompt + L"<");
-    std::vector<size_t> choises;
+    std::deque<size_t> choises;
     std::wstring input;
     std::wstring final_choise;
     int key = 0;
@@ -188,12 +189,13 @@ int takeInput(const std::vector<std::wstring>& lines) {
                 done = true;
                 break;
             case 14:
-                ++choise;
+                if (choise < choises.size() - 1) ++choise;
                 break;
             case 16:
                 if (choise > 0) --choise;
                 break;
             case 23:
+                choise = 0;
                 input.clear();
                 break;
             case -1:
@@ -220,7 +222,10 @@ int takeInput(const std::vector<std::wstring>& lines) {
         int done = 1;
         choises.clear();
         for (size_t i = 0; i < lines.size(); ++i) {
-            if (matchStraight(input, lines[i])) {
+            if (lines[i].find(input) != -1) {
+                choises.push_front(i);
+            }
+            else if (matchStraight(input, lines[i])) {
                 choises.push_back(i);
             }
         }
@@ -311,14 +316,6 @@ int getRows() {
 }
 
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
-    // int iinput = input.size() - 1;
-    // if (iinput <= 0) return false;
-    // for (int i = result.size() - 1; i >= 0; --i) {
-    //     if (input[iinput] == result[i]) --iinput;
-    //     if (iinput <= 0) return true;
-    // }
-    // return false;
-
     size_t iinput = 0;
     for (auto i = 0; i < result.size(); ++i) {
         if (matchCharacter(input[iinput], result[i])) ++iinput;
@@ -375,7 +372,7 @@ bool matchCharacter(wchar_t a, wchar_t b) {
     else return a == b;
 }
 
-void printOptions(std::vector<std::wstring>& options, int line_top, int line_bottom
+void printOptions(std::deque<std::wstring>& options, int line_top, int line_bottom
         , int selected) {
 
 }

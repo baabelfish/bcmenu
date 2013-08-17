@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <deque>
 #include <sstream>
 
 namespace aux {
@@ -18,6 +18,6 @@ namespace aux {
  * enought arguments left in argv and you try to overindex.
  */
 std::wstring stringToWideString(const std::string& str);
-bool parseNext(int argc, char* argv[], int& current, int option_amount, std::vector<std::string>& options);
+bool parseNext(int argc, char* argv[], int& current, int option_amount, std::deque<std::string>& options);
 // void clearSurroundingWhitespace(std::string& str);
 } // namespace aux

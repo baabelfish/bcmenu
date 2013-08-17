@@ -8,7 +8,7 @@ std::wstring stringToWideString(const std::string& str) {
     return ws.str();
 }
 
-bool parseNext(int argc, char* argv[], int& current, int option_amount, std::vector<std::string>& options) {
+bool parseNext(int argc, char* argv[], int& current, int option_amount, std::deque<std::string>& options) {
     ++current;
     if (current < argc) {
         std::string str = argv[current];
