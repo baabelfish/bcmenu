@@ -37,31 +37,31 @@ Bcmenu is a fuzzy menu for the terminal, made with ncurses.\n\
 Options:\n\
 --------\n\
 \n\
---ignore-case\n\
+--ignore-case or -ic\n\
     Ignores case in user input.\n\
 \n\
---smart-case\n\
+--smart-case or -sc\n\
     Ignores case until user types an upper case letter. [Default]\n\
 \n\
---exact-case\n\
+--exact-case or -ec\n\
     Input string's case must match exactly.\n\
 \n\
---exact\n\
+--exact or -e\n\
     User input must match exactly to a part of the option.\n\
 \n\
---fuzzy\n\
+--fuzzy or -f\n\
     Real fuzzy matching [TODO]\n\
 \n\
---simplyfuzzy\n\
+--simplyfuzzy or -sf\n\
     Uses naive fuzzy matching. [Default]\n\
 \n\
---bottom\n\
+--bottom or -b\n\
     Draw the prompt to the bottom of the window.\n\
 \n\
 -h or --help\n\
     Get this help text.\n\
 \n\
---prompt <prompt_string>\n\
+--prompt <prompt_string> or -p <prompt_string>\n\
     Sets input prompt.\n\
 \n\
 --focus-prefix\n\
@@ -101,6 +101,7 @@ void initPairs();
 void printBlank();
 void printLine(std::wstring str);
 void readIn(std::deque<std::wstring>& lines);
+bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second);
 bool matchCharacter(wchar_t a, wchar_t b);
 void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         , const std::deque<std::wstring>& lines);
@@ -130,55 +131,55 @@ int parseArguments(int argc, char* argv[]) {
     std::deque<std::string> options;
 
     for (auto i = 2; i < argc; ++i) {
-        if (std::strcmp(argv[i], "--ignore-case") == 0) {
+        if (compareArgument(argv[i], "--ignore-case", "-ic")) {
             g_case = TypeCase::Ignore;
         }
-        else if (std::strcmp(argv[i], "--smart-case") == 0) {
+        else if (compareArgument(argv[i], "--smart-case", "-sc")) {
             g_case = TypeCase::Smart;
         }
-        else if (std::strcmp(argv[i], "--exact-case") == 0) {
+        else if (compareArgument(argv[i], "--exact-case", "-ec")) {
             g_case = TypeCase::Exact;
         }
-        else if (std::strcmp(argv[i], "--exact") == 0) {
+        else if (compareArgument(argv[i], "--exact", "-e")) {
             g_algorithm = MatchAlgorithm::Exact;
         }
-        else if (std::strcmp(argv[i], "--fuzzy") == 0) {
+        else if (compareArgument(argv[i], "--fuzzy", "-f")) {
             g_algorithm = MatchAlgorithm::Fuzzy;
         }
-        else if (std::strcmp(argv[i], "--simplyfuzzy") == 0) {
+        else if (compareArgument(argv[i], "--simplyfuzzy", "-sf")) {
             g_algorithm = MatchAlgorithm::SimpleFuzzy;
         }
-        else if (std::strcmp(argv[i], "--bottom") == 0) {
+        else if (compareArgument(argv[i], "--bottom", "-b")) {
             g_draw_inverted = true;
         }
-        else if (std::strcmp(argv[i], "-h") == 0 && std::strcmp(argv[i], "--help") == 0) {
+        else if (compareArgument(argv[i], "--help", "-h")) {
             return 2;
         }
-        else if (std::strcmp(argv[i], "--prompt") == 0) {
+        else if (compareArgument(argv[i], "--prompt", "-p")) {
             if (!aux::parseNext(argc, argv, i, 1, options) || options.size() != 1) return 2;
             else g_prompt = aux::stringToWideString(options[0]);
         }
-        else if (std::strcmp(argv[i], "--focus-prefix") == 0) {
+        else if (compareArgument(argv[i], "--focus-prefix", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-active-fg") == 0) {
+        else if (compareArgument(argv[i], "--color-active-fg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-focused-fg") == 0) {
+        else if (compareArgument(argv[i], "--color-focused-fg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-normal-fg") == 0) {
+        else if (compareArgument(argv[i], "--color-normal-fg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-prefix-fg") == 0) {
+        else if (compareArgument(argv[i], "--color-prefix-fg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-input-fg") == 0) {
+        else if (compareArgument(argv[i], "--color-input-fg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-active-bg") == 0) {
+        else if (compareArgument(argv[i], "--color-active-bg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-focused-bg") == 0) {
+        else if (compareArgument(argv[i], "--color-focused-bg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-normal-bg") == 0) {
+        else if (compareArgument(argv[i], "--color-normal-bg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-prefix-bg") == 0) {
+        else if (compareArgument(argv[i], "--color-prefix-bg", "")) {
         }
-        else if (std::strcmp(argv[i], "--color-input-bg") == 0) {
+        else if (compareArgument(argv[i], "--color-input-bg", "")) {
         }
         else {
             return 2;
@@ -193,6 +194,10 @@ void readIn(std::deque<std::wstring>& lines) {
         if (temp == ".") continue;
         lines.push_front(aux::stringToWideString(temp));
     }
+}
+
+bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second) {
+    return (std::strcmp(arg, choice_first.c_str()) == 0 || std::strcmp(arg, choice_second.c_str()) == 0);
 }
 
 int takeInput(const std::deque<std::wstring>& lines) {
