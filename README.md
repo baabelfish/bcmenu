@@ -1,5 +1,5 @@
-fuzzy-cli-finder
-================
+bcmenu
+======
 
 Bcmenu is a fuzzy menu for command line. It currently comes with a wrapper for
 opening files, navigating folders and going back directory stack.
@@ -8,8 +8,6 @@ Installation
 ------------
 First you should compile bcmenu\_exe with ``make``. After that you should move
 bcmenu and bcmenu\_exe to your preferred directory for execution.
-
-#####
 
 Usage
 -----
@@ -46,19 +44,22 @@ Keybindings
 - `C-p` Previous match.
 - `C-w` Clears the search.
 - `C-c` Normal interrupt (result is not saved).
+- `C-o` Add focused item to selection.
+- `C-i` Unselect focused item.
 
 TODO
 ----
 - Add colors.
 - Make characters customizable.
-- Add bookmarks.
 - Write more match functions (including a proper fuzzy match).
-- Remember terminal screen.
 - Show selected characters underlined in search.
-- Add support for multiple selection
+- Make options scroll with focused item.
+- Add regex support.
 
 ### Done
 - Fix pipe and get rid of bcmenu\_result.
+- Add support for multiple selection.
+- Remember terminal screen.
 
 Similar software
 ----------------

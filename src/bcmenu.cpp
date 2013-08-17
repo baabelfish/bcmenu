@@ -23,12 +23,69 @@ enum class TypeCase {
 
 static bool g_has_upper = false;
 static std::string g_tempfile;
-static std::wstring g_prompt;
+static std::wstring g_prompt = L":";
 static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm;
 
 static const std::string g_helptext =
-"Tämä on jelppiteksti\
+"Usage: bcmenu [OPTIONS] <<< PIPE\n\
+\n\
+Bcmenu is a fuzzy menu for the terminal, made with ncurses.\n\
+\n\
+\n\
+Options:\n\
+--------\n\
+\n\
+--ignore-case\n\
+    Ignores case in user input.\n\
+\n\
+--smart-case\n\
+    Ignores case until user types an upper case letter. [Default]\n\
+\n\
+--exact-case\n\
+    Input string's case must match exactly.\n\
+\n\
+--exact\n\
+    User input must match exactly to a part of the option.\n\
+\n\
+--fuzzy\n\
+    Real fuzzy matching [TODO]\n\
+\n\
+--simplyfuzzy\n\
+    Uses naive fuzzy matching. [Default]\n\
+\n\
+-h or --help\n\
+    Get this help text.\n\
+\n\
+--prompt <prompt_string>\n\
+    Sets input prompt.\n\
+\n\
+--focus-prefix\n\
+    String to use in front of the focused string. [TODO]\n\
+\n\
+--color-active-fg\n\
+--color-focused-fg\n\
+--color-normal-fg\n\
+--color-prefix-fg\n\
+--color-input-fg\n\
+--color-active-bg\n\
+--color-focused-bg\n\
+--color-normal-bg\n\
+--color-prefix-bg\n\
+--color-input-bg\n\
+    These are used to control colors. [TODO]\n\
+\n\
+\n\
+Keybindings:\n\
+------------\n\
+\n\
+Enter   Saves the result and exits the program.\n\
+C-n     Next match.\n\
+C-p     Previous match.\n\
+C-w     Clears the search.\n\
+C-c     Normal interrupt (result is not saved).\n\
+C-o     Add focused item to selection.\n\
+C-i     Unselect focused item.\
 ";
 
 int parseArguments(int argc, char* argv[]);
@@ -87,7 +144,7 @@ int parseArguments(int argc, char* argv[]) {
         else if (std::strcmp(argv[i], "--simplyfuzzy") == 0) {
             g_algorithm = MatchAlgorithm::SimpleFuzzy;
         }
-        else if (std::strcmp(argv[i], "-h") == 0) {
+        else if (std::strcmp(argv[i], "-h") == 0 && std::strcmp(argv[i], "--help") == 0) {
             return 2;
         }
         else if (std::strcmp(argv[i], "--prompt") == 0) {
@@ -146,8 +203,8 @@ int takeInput(const std::deque<std::wstring>& lines) {
     while (!done) {
         if (choise > choises.size() - 1) choise = choises.size() - 1;
         matchInputToLines(input, choises, lines);
-        printInput(0, input);
         printOptions(lines, choises, 1, aux::getRows(), choise, selected);
+        printInput(0, input);
         refresh();
 
         key = fetchKey();
@@ -300,7 +357,7 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
 void printInput(int line, const std::wstring& input) {
     move(line, 0);
     aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
-    printLine(g_prompt + input + L"<");
+    printLine(g_prompt + input);
 }
 
 void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
