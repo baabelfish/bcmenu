@@ -49,6 +49,7 @@ Keybindings
 
 Examples
 --------
+##### Opening files with vim
 <img src="https://raw.github.com/baabelfish/bcmenu/master/examples/example1.gif" alt="Finding files" />
 
 TODO
