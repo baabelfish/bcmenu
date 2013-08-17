@@ -26,42 +26,13 @@ static std::wstring g_prompt;
 static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm;
 
-namespace Color {
-static const int DEFAULT = 225;
-static const int TRANSPARENT = -1; // only for background
-static const int BLACK = 0;
-static const int RED = 1;
-static const int GREEN = 2;
-static const int YELLOW = 3;
-static const int BLUE = 4;
-static const int MAGENTA = 5;
-static const int CYAN = 6;
-static const int WHITE = 7;
-static const int BRIGHT_BLACK = 0 + 8;
-static const int BRIGHT_RED = 1 + 8;
-static const int BRIGHT_GREEN = 2 + 8;
-static const int BRIGHT_YELLOW = 3 + 8;
-static const int BRIGHT_BLUE = 4 + 8;
-static const int BRIGHT_MAGENTA = 5 + 8;
-static const int BRIGHT_CYAN = 6 + 8;
-static const int BRIGHT_WHITE = 7 + 8;
-static const int DEFAULT_OFFSET = 226;
-static const int COLOR_MODIFIER = 15;
-}
 static const std::string g_helptext =
 "Tämä on jelppiteksti\
 ";
 
 int parseArguments(int argc, char* argv[]);
-void setColor(int fg, int bg);
-void attrReset();
-void attrBold();
-void attrUnderline();
-void attrBlink();
 bool matchStraight(const std::wstring& input, const std::wstring& result);
 int fetchKey();
-int getCols();
-int getRows();
 int takeInput(const std::deque<std::wstring>& lines);
 void initCurses();
 void initPairs();
@@ -173,7 +144,7 @@ int takeInput(const std::deque<std::wstring>& lines) {
         if (choise > choises.size() - 1) choise = choises.size() - 1;
         matchInputToLines(input, choises, lines);
         printInput(0, input);
-        printOptions(lines, choises, 1, getRows(), choise);
+        printOptions(lines, choises, 1, aux::getRows(), choise);
         refresh();
 
         key = fetchKey();
@@ -243,9 +214,9 @@ void initCurses() {
 }
 
 void printLine(std::wstring str) {
-    int cols = getCols();
+    int cols = aux::getCols();
     if (str.size() > (unsigned)cols) {
-        str = str.substr(0, getCols());
+        str = str.substr(0, aux::getCols());
     }
     else {
         int amount = cols - str.size();
@@ -257,27 +228,13 @@ void printLine(std::wstring str) {
 }
 
 void printBlank() {
-    int cols = getCols();
+    int cols = aux::getCols();
     std::wstring str;
     for (auto i = 0; i < cols; ++i) {
         str += L' ';
     }
     str += L'\n';
     printLine(str);
-}
-
-int getCols() {
-    int value;
-    int asda;
-    getmaxyx(stdscr, asda, value);
-    return value;
-}
-
-int getRows() {
-    int value;
-    int asda;
-    getmaxyx(stdscr, value, asda);
-    return value;
 }
 
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
@@ -289,20 +246,6 @@ bool matchStraight(const std::wstring& input, const std::wstring& result) {
     return false;
 }
 
-void setColor(int foreground, int background) {
-    if (background == -1) {
-        if (foreground == -1) {
-            attron(COLOR_PAIR(Color::DEFAULT));
-        }
-        else {
-            attron(COLOR_PAIR(foreground + Color::DEFAULT_OFFSET));
-        }
-    }
-    else {
-        attron(COLOR_PAIR(foreground * Color::COLOR_MODIFIER + background));
-    }
-}
-
 void initPairs() {
     for (int i = 0; i < Color::COLOR_MODIFIER; ++i) {
         init_pair(Color::DEFAULT_OFFSET + i, i, -1);
@@ -310,25 +253,6 @@ void initPairs() {
             init_pair(i * Color::COLOR_MODIFIER + j, i, j);
         }
     }
-}
-
-void attrReset() {
-    attron(COLOR_PAIR(Color::DEFAULT));
-    attroff(A_BLINK);
-    attroff(A_UNDERLINE);
-    attroff(A_BOLD);
-}
-
-void attrBold() {
-    attron(A_BOLD);
-}
-
-void attrUnderline() {
-    attron(A_UNDERLINE);
-}
-
-void attrBlink() {
-    attron(A_BLINK);
 }
 
 bool matchCharacter(wchar_t a, wchar_t b) {
@@ -362,7 +286,7 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
 
 void printInput(int line, const std::wstring& input) {
     move(line, 0);
-    setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
+    aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
     printLine(g_prompt + input + L"<");
 }
 
@@ -372,15 +296,15 @@ void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t
     for (auto i = 0; i < options.size() && printline < line_bottom - line_top; ++i) {
         move(printline++, 0);
         if (i == selected) {
-            setColor(Color::BRIGHT_YELLOW, Color::TRANSPARENT);
+            aux::setColor(Color::BRIGHT_YELLOW, Color::TRANSPARENT);
             printLine(L"> " + lines[options[i]]);
         }
         else {
-            setColor(Color::WHITE, Color::TRANSPARENT);
+            aux::setColor(Color::WHITE, Color::TRANSPARENT);
             printLine(L"  " + lines[options[i]]);
         }
     }
-    setColor(Color::WHITE, Color::TRANSPARENT);
+    aux::setColor(Color::WHITE, Color::TRANSPARENT);
     for (auto i = printline; i < line_bottom - line_top; ++i) {
         move(printline++, 0);
         printBlank();
