@@ -46,8 +46,8 @@ Examples
 --------
 ##### Opening files with vim
 ```
-cd /usr/include
-vim $(find|bcmenu)
+$ cd /usr/include
+$ vim $(find|bcmenu)
 ```
 <img src="https://raw.github.com/baabelfish/bcmenu/master/examples/example1.gif" alt="Finding files" />
 
