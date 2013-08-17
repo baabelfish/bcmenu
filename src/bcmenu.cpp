@@ -22,7 +22,7 @@ enum class TypeCase {
 static bool g_has_upper = false;
 static std::string g_tempfile;
 static std::wstring g_prompt;
-static TypeCase g_case = TypeCase::Exact;
+static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm;
 
 namespace Color {
@@ -67,6 +67,7 @@ void initPairs();
 void printBlank();
 void printLine(std::wstring str);
 void readIn(std::vector<std::wstring>& lines);
+bool matchCharacter(wchar_t a, wchar_t b);
 void printOptions(std::vector<std::wstring>& options, int line_top, int line_bottom
         , int selected);
 
@@ -320,10 +321,7 @@ bool matchStraight(const std::wstring& input, const std::wstring& result) {
 
     size_t iinput = 0;
     for (auto i = 0; i < result.size(); ++i) {
-        wchar_t a = input[iinput];
-        wchar_t b = result[i];
-    // if (g_case == TypeCase::Ignore
-        if (input[iinput] == result[i]) ++iinput;
+        if (matchCharacter(input[iinput], result[i])) ++iinput;
         if (iinput == input.size()) return true;
     }
     return false;
@@ -369,6 +367,12 @@ void attrUnderline() {
 
 void attrBlink() {
     attron(A_BLINK);
+}
+
+bool matchCharacter(wchar_t a, wchar_t b) {
+    if (g_case == TypeCase::Ignore || (g_case == TypeCase::Smart && !g_has_upper))
+        return std::towlower(a) == std::tolower(b);
+    else return a == b;
 }
 
 void printOptions(std::vector<std::wstring>& options, int line_top, int line_bottom
