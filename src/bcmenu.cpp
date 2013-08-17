@@ -244,7 +244,7 @@ int takeInput(const std::deque<std::wstring>& lines) {
             case -1:
                 break;
             default:
-                input += key;
+                if (!(1 <= key && key <= 31)) input += key;
                 break;
         }
     }

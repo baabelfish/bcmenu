@@ -45,7 +45,11 @@ Keybindings
 - `C-w` Clears the search.
 - `C-c` Normal interrupt (result is not saved).
 - `C-o` Add focused item to selection.
-- `C-i` Unselect focused item.
+- `C-i` Deselect focused item.
+
+Examples
+--------
+<img src="https://raw.github.com/baabelfish/bcmenu/master/examples/example1.gif" alt="Finding files" />
 
 TODO
 ----
