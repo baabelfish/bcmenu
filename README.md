@@ -21,11 +21,6 @@ that's returned to stdout after the program stops running.
 $ echo "option1\nnoption2"|bcmenu
 ``
 
-##### Opening a file in vim
-``
-vim $(find|bcmenu)
-``
-
 <!--(
 #### Opening a file from terminal: 
 ``````
@@ -50,6 +45,10 @@ Keybindings
 Examples
 --------
 ##### Opening files with vim
+``
+cd /usr/include
+vim $(find|bcmenu)
+``
 <img src="https://raw.github.com/baabelfish/bcmenu/master/examples/example1.gif" alt="Finding files" />
 
 TODO
