@@ -21,6 +21,7 @@ enum class TypeCase {
     , Smart
 };
 
+static bool g_draw_inverted = false;
 static bool g_has_upper = false;
 static std::string g_tempfile;
 static std::wstring g_prompt = L":";
@@ -53,6 +54,9 @@ Options:\n\
 \n\
 --simplyfuzzy\n\
     Uses naive fuzzy matching. [Default]\n\
+\n\
+--bottom\n\
+    Draw the prompt to the bottom of the window.\n\
 \n\
 -h or --help\n\
     Get this help text.\n\
@@ -98,7 +102,7 @@ void printBlank();
 void printLine(std::wstring str);
 void readIn(std::deque<std::wstring>& lines);
 bool matchCharacter(wchar_t a, wchar_t b);
-void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
+void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         , const std::deque<std::wstring>& lines);
 void printInput(int line, const std::wstring& input);
 void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
@@ -143,6 +147,9 @@ int parseArguments(int argc, char* argv[]) {
         }
         else if (std::strcmp(argv[i], "--simplyfuzzy") == 0) {
             g_algorithm = MatchAlgorithm::SimpleFuzzy;
+        }
+        else if (std::strcmp(argv[i], "--bottom") == 0) {
+            g_draw_inverted = true;
         }
         else if (std::strcmp(argv[i], "-h") == 0 && std::strcmp(argv[i], "--help") == 0) {
             return 2;
@@ -191,23 +198,28 @@ void readIn(std::deque<std::wstring>& lines) {
 int takeInput(const std::deque<std::wstring>& lines) {
     if (lines.empty()) return 1;
     initCurses();
-    std::deque<size_t> choises;
+    std::deque<size_t> choices;
     std::set<int> selected;
     std::wstring input;
-    std::wstring final_choise;
+    std::wstring final_choice;
     int key = 0;
     bool done = false;
     bool interrupt = false;
-    int choise = 0;
+    int choice = 0;
 
     while (!done) {
-        if (choise > choises.size() - 1) choise = choises.size() - 1;
-        matchInputToLines(input, choises, lines);
-        printOptions(lines, choises, 1, aux::getRows(), choise, selected);
+        if (choice > choices.size() - 1) choice = choices.size() - 1;
+        matchInputToLines(input, choices, lines);
+        printOptions(lines, choices, 1, aux::getRows(), choice, selected);
         printInput(0, input);
         refresh();
 
         key = fetchKey();
+        if (g_draw_inverted) {
+            if (key == 14) key = 16;
+            else if (key == 16) key = 14;
+        }
+
         switch (key) {
             // case KEY_ESC:
             case 3:
@@ -220,25 +232,25 @@ int takeInput(const std::deque<std::wstring>& lines) {
                 break;
             case '\r':
             case '\n':
-                if (!choises.empty() && !lines.empty() && choise < choises.size())
-                    final_choise = lines[choises[choise]];
+                if (!choices.empty() && !lines.empty() && choice < choices.size())
+                    final_choice = lines[choices[choice]];
                 done = true;
                 break;
             case 14:
-                if ((unsigned)choise < choises.size() - 1) ++choise;
+                if ((unsigned)choice < choices.size() - 1) ++choice;
                 break;
             case 16:
-                if (choise > 0) --choise;
+                if (choice > 0) --choice;
                 break;
             case 15:
-                selected.insert(choises[choise]);
+                selected.insert(choices[choice]);
                 break;
             case 9:
-                if (selected.find(choise) != selected.end())
-                    selected.erase(selected.find(choise));
+                if (selected.find(choice) != selected.end())
+                    selected.erase(selected.find(choice));
                 break;
             case 23:
-                choise = 0;
+                choice = 0;
                 input.clear();
                 break;
             case -1:
@@ -254,7 +266,7 @@ int takeInput(const std::deque<std::wstring>& lines) {
         if (!selected.empty())
             for (auto it = selected.rbegin(); it != selected.rend(); ++it)
                 std::wcerr << lines[*it] << std::endl;
-        else std::wcerr << final_choise;
+        else std::wcerr << final_choice;
     }
     return 0;
 }
@@ -331,7 +343,7 @@ bool matchCharacter(wchar_t a, wchar_t b) {
     else return a == b;
 }
 
-void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
+void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         , const std::deque<std::wstring>& lines) {
     if (g_case == TypeCase::Smart) {
         g_has_upper = false;
@@ -343,18 +355,19 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choises
         }
     }
 
-    choises.clear();
+    choices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
         if (lines[i].find(input) != -1) {
-            choises.push_front(i);
+            choices.push_front(i);
         }
         else if (matchStraight(input, lines[i])) {
-            choises.push_back(i);
+            choices.push_back(i);
         }
     }
 }
 
 void printInput(int line, const std::wstring& input) {
+    if (g_draw_inverted) line = aux::getRows() - 1;
     move(line, 0);
     aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
     printLine(g_prompt + input);
@@ -364,7 +377,8 @@ void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t
         , int line_top, int line_bottom, int selected, const std::set<int>& multiple) {
     int printline = 1;
     for (auto i = 0; i < options.size() && printline < line_bottom - line_top; ++i) {
-        move(printline++, 0);
+        if (g_draw_inverted) move(aux::getRows() - 1 - printline++, 0);
+        else move(printline++, 0);
         if (i == selected) {
             aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
             if (multiple.find(options[i]) != multiple.end()) printLine(L"*>" + lines[options[i]]);
@@ -381,7 +395,8 @@ void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t
     }
     aux::setColor(Color::WHITE, Color::TRANSPARENT);
     for (auto i = printline; i < line_bottom - line_top; ++i) {
-        move(printline++, 0);
+        if (g_draw_inverted) move(aux::getRows() - 1 - printline++, 0);
+        else move(printline++, 0);
         printBlank();
     }
 }
