@@ -21,16 +21,6 @@ that's returned to stdout after the program stops running.
 $ echo "option1\nnoption2"|bcmenu
 ``
 
-<!--(
-#### Opening a file from terminal: 
-``````
-
-#### Add the following to your `.zshrc` to engage the previous command with `C-t`:
-```bindkey -s '^T' '^qbcmenu_files && vim $(bcmenu_result)\n'```
-
-#### This one gets you to the directory you want:
-```bindkey -s '^F' '^qbcmenu_dirs && cd "$(bcmenu_result)"\n'```
-)-->
 Keybindings
 -----------
 
@@ -50,6 +40,13 @@ $ cd /usr/include
 $ vim $(find|bcmenu)
 ```
 <img src="https://raw.github.com/baabelfish/bcmenu/master/examples/example1.gif" alt="Finding files" />
+
+#### Installing and removing packages with pacman
+```
+$ sudo pacman -S $(package-query -Slf"%r/%n %v %d"|awk '{ printf "%-30s",$1; printf "%-10s",$2; $1=$2=""; print }'|sort|bcmenu|cut -f2 -d'/'|cut -f1 -d' '|tr '\n' ' ')
+$ sudo pacman -R $(pacman -Sl|grep '\[installed'|cut -f2 -d' '|sort|bcmenu|cut -f2 -d'/'|cut -f1 -d' ')
+```
+<img src="https://raw.github.com/baabelfish/bcmenu/master/examples/example2.gif" alt="Finding files" />
 
 TODO
 ----
