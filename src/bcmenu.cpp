@@ -89,7 +89,7 @@ Argument g_args[] = {
     { "-h", "--help", "Prints this help text.", [&]() {
         return 2;
         }}
-    , { "--ignore-case", "-ic", "Ignores case complitely.", [&]() {
+    , { "--ignore-case", "-ic", "Ignores case completely.", [&]() {
         g_case = TypeCase::Ignore;
         return 0;
         }}
