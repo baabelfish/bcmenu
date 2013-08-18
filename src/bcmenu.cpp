@@ -1,4 +1,17 @@
+// #include "../config.h"
+
+#if defined(USING_NCURSESW_CURSES_H)
+#include <ncursesw/curses.h>
+#elif defined(USING_NCURSESW_H)
+#include <ncursesw.h>
+#elif defined(USING_NCURSES_CURSES_H)
+#include <ncurses/curses.h>
+#elif defined(USING_NCURSES_H)
+#include <ncurses.h>
+#else
 #include <curses.h>
+#endif
+
 #include <functional>
 #include <regex>
 #include <map>

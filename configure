@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "" > config.h
+[[ -e /usr/include/ncursesw/curses.h ]] && echo 'USING_NCURSESW_CURSES_H' > config.h && exit
+[[ -e /usr/include/ncursesw.h ]] && echo 'USING_NCURSESW_H' > config.h && exit
+[[ -e /usr/include/ncurses/curses.h ]] && echo 'USING_NCURSES_CURSES_H' > config.h && exit
+[[ -e /usr/include/ncurses.h ]] && echo 'USING_NCURSES_H' > config.h && exit

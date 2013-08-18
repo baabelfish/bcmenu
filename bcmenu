@@ -3,4 +3,8 @@ if [[ ! -e ~/.cache/fcf ]]; then
     mkdir -p ~/.cache/fcf
 fi
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ ! -e $DIR/bcmenu_exe ]]; then
+    echo "You should compile bcmenu_exe first."
+    return
+fi
 $DIR/bcmenu_exe 1234 $* 3>&2 2>&1 1>&3

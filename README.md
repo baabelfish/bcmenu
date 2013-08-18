@@ -6,7 +6,12 @@ selection back, you know the drill.
 
 Installation
 ------------
-First you should compile bcmenu\_exe with ``make``. After that you should move
+First you need to configure and compile bcmenu\_exe.
+```
+$ ./configure
+$ make
+```
+After that you should move
 bcmenu and bcmenu\_exe to your preferred directory for execution.
 
 Usage
