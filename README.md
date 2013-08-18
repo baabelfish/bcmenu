@@ -17,9 +17,9 @@ but has fuzzy matching and it's for the terminal.
 
 The next bit gives a list of options to bcmenu and it let's you choose one
 that's returned to stdout after the program stops running.
-``
+```
 $ echo "option1\nnoption2"|bcmenu
-``
+```
 
 Keybindings
 -----------

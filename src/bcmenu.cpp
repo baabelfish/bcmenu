@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <functional>
 #include <regex>
 #include <map>
 #include <deque>
@@ -11,6 +12,28 @@
 #include <cstring>
 #include <sstream>
 #include "aux.hpp"
+
+int parseArguments(int argc, char* argv[]);
+bool matchStraight(const std::wstring& input, const std::wstring& result);
+int fetchKey();
+int takeInput(const std::deque<std::wstring>& lines);
+void initCurses();
+void initPairs();
+void printBlank();
+void printLine(std::wstring str);
+void readIn(std::deque<std::wstring>& lines);
+bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second);
+bool matchCharacter(wchar_t a, wchar_t b);
+void matchFuzzy(const std::wstring& input, std::multimap<unsigned, size_t>& choices
+        , const std::deque<std::wstring>& lines);
+void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
+        , const std::deque<std::wstring>& lines);
+void printInput(int line, const std::wstring& input);
+void printOptions(const std::deque<std::wstring>& lines, const std::multimap<unsigned, size_t>& options
+        , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
+void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
+        , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
+void printHelp();
 
 enum class MatchAlgorithm {
     Exact
@@ -39,55 +62,6 @@ static const std::string g_helptext =
 Bcmenu is a fuzzy menu for the terminal, made with ncurses.\n\
 \n\
 \n\
-Options:\n\
---------\n\
-\n\
---ignore-case or -ic\n\
-    Ignores case in user input.\n\
-\n\
---smart-case or -sc\n\
-    Ignores case until user types an upper case letter. [Default]\n\
-\n\
---exact-case or -ec\n\
-    Input string's case must match exactly.\n\
-\n\
---exact or -e\n\
-    User input must match exactly to a part of the option.\n\
-\n\
---fuzzy or -f\n\
-    Real fuzzy matching [TODO]\n\
-\n\
---simplyfuzzy or -sf\n\
-    Uses naive fuzzy matching. [Default]\n\
-\n\
---bottom or -b\n\
-    Draw the prompt to the bottom of the window.\n\
-\n\
--h or --help\n\
-    Get this help text.\n\
-\n\
---prompt <prompt_string> or -p <prompt_string>\n\
-    Sets input prompt.\n\
-\n\
---focus-prefix\n\
-    String to use in front of the focused string. [TODO]\n\
-\n\
---color-active-fg\n\
---color-focused-fg\n\
---color-normal-fg\n\
---color-prefix-fg\n\
---color-input-fg\n\
---color-active-bg\n\
---color-focused-bg\n\
---color-normal-bg\n\
---color-prefix-bg\n\
---color-input-bg\n\
-    These are used to control colors. [TODO]\n\
-\n\
---debug \n\
-    Shows debug info when possible.\n\
-\n\
-\n\
 Keybindings:\n\
 ------------\n\
 \n\
@@ -97,33 +71,104 @@ C-p     Previous match.\n\
 C-w     Clears the search.\n\
 C-c     Normal interrupt (result is not saved).\n\
 C-o     Add focused item to selection.\n\
-C-i     Unselect focused item.\
+C-i     Unselect focused item.\n\
+\n\
+\n\
+Arguments:\n\
+----------\
 ";
 
-int parseArguments(int argc, char* argv[]);
-bool matchStraight(const std::wstring& input, const std::wstring& result);
-int fetchKey();
-int takeInput(const std::deque<std::wstring>& lines);
-void initCurses();
-void initPairs();
-void printBlank();
-void printLine(std::wstring str);
-void readIn(std::deque<std::wstring>& lines);
-bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second);
-bool matchCharacter(wchar_t a, wchar_t b);
-void matchFuzzy(const std::wstring& input, std::multimap<unsigned, size_t>& choices
-        , const std::deque<std::wstring>& lines);
-void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
-        , const std::deque<std::wstring>& lines);
-void printInput(int line, const std::wstring& input);
-void printOptions(const std::deque<std::wstring>& lines, const std::multimap<unsigned, size_t>& options
-        , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
-void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
-        , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
+struct Argument {
+    std::string argl;
+    std::string args;
+    std::string description;
+    std::function<int ()> func;
+};
+size_t g_args_size = 23;
+Argument g_args[] = {
+    { "-h", "--help", "Prints this help text.", [&]() {
+        return 2;
+        }}
+    , { "--ignore-case", "-ic", "Ignores case complitely.", [&]() {
+        g_case = TypeCase::Ignore;
+        return 0;
+        }}
+    , { "--smart-case", "-sc", "Ignores case until user presses an uppercase key. [Default]", [&]() {
+        return 0;
+        g_case = TypeCase::Smart;
+        }}
+    , { "--exact-case", "-ec", "Matches characters exactly.", [&]() {
+        return 0;
+        g_case = TypeCase::Exact;
+        }}
+    , { "--exact", "-e", "Uses exact match as algorithm.", [&]() {
+        return 0;
+        g_algorithm = MatchAlgorithm::Exact;
+        }}
+    , { "--regex", "-r", "Matches with regex. [Todo]", [&]() {
+        return 0;
+        g_algorithm = MatchAlgorithm::Regex;
+        }}
+    , { "--fuzzy", "-f", "Uses real fuzzy matching. [Todo]", [&]() {
+        g_algorithm = MatchAlgorithm::Fuzzy;
+        return 0;
+        }}
+    , { "--simplyfuzzy", "-sf", "Uses a naive matching algorithm. [Default]", [&]() {
+        g_algorithm = MatchAlgorithm::SimpleFuzzy;
+        return 0;
+        }}
+    , { "--bottom", "-b", "Draws prompt to the bottom of the screen.", [&]() {
+        g_draw_inverted = true;
+        return 0;
+        }}
+    , { "--help", "-h", "Prints this helptext.", [&]() {
+        return 2;
+        }}
+    , { "--debug", "", "Shows possible debug information.", [&]() {
+        g_debug = true;
+        return 0;
+        }}
+    , { "--focus-prefix", "", "", [&]() {
+        return 0;
+        }}
+    , { "--focus-prefix", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-active-fg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-focused-fg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-normal-fg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-prefix-fg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-input-fg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-active-bg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-focused-bg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-normal-bg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-prefix-bg", "", "", [&]() {
+        return 0;
+        }}
+    , { "--color-input-bg", "", "", [&]() {
+        return 0;
+        }}
+};
 
 int main(int argc, char* argv[]) {
     int re = parseArguments(argc, argv);
-    if (re == 2) std::cout << g_helptext << std::endl;
+    if (re == 2) printHelp();
     if (re != 0) {
         return 1;
     }
@@ -132,7 +177,6 @@ int main(int argc, char* argv[]) {
     readIn(lines);
     bool rval = takeInput(lines);
     return rval;
-    return true;
 }
 
 int parseArguments(int argc, char* argv[]) {
@@ -141,70 +185,16 @@ int parseArguments(int argc, char* argv[]) {
         return 1;
     }
 
-    std::deque<std::string> options;
-
     for (auto i = 2; i < argc; ++i) {
-        if (compareArgument(argv[i], "--ignore-case", "-ic")) {
-            g_case = TypeCase::Ignore;
+        bool found = false;
+        for (int j = 0; j < g_args_size; ++j) {
+            if (compareArgument(argv[i], g_args[j].args, g_args[j].argl)) {
+                int re = g_args[j].func();
+                found = true;
+                if (re != 0) return re;
+            }
         }
-        else if (compareArgument(argv[i], "--smart-case", "-sc")) {
-            g_case = TypeCase::Smart;
-        }
-        else if (compareArgument(argv[i], "--exact-case", "-ec")) {
-            g_case = TypeCase::Exact;
-        }
-        else if (compareArgument(argv[i], "--exact", "-e")) {
-            g_algorithm = MatchAlgorithm::Exact;
-        }
-        else if (compareArgument(argv[i], "--regex", "-r")) {
-            g_algorithm = MatchAlgorithm::Fuzzy;
-        }
-        else if (compareArgument(argv[i], "--fuzzy", "-f")) {
-            g_algorithm = MatchAlgorithm::Fuzzy;
-        }
-        else if (compareArgument(argv[i], "--simplyfuzzy", "-sf")) {
-            g_algorithm = MatchAlgorithm::SimpleFuzzy;
-        }
-        else if (compareArgument(argv[i], "--bottom", "-b")) {
-            g_draw_inverted = true;
-        }
-        else if (compareArgument(argv[i], "--help", "-h")) {
-            return 2;
-        }
-        else if (compareArgument(argv[i], "--prompt", "-p")) {
-            if (!aux::parseNext(argc, argv, i, 1, options) || options.size() != 1) return 2;
-            else g_prompt = aux::stringToWideString(options[0]);
-        }
-        else if (compareArgument(argv[i], "--debug", "")) {
-            g_debug = true;
-        }
-        else if (compareArgument(argv[i], "--focus-prefix", "")) {
-        }
-        else if (compareArgument(argv[i], "--focus-prefix", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-active-fg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-focused-fg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-normal-fg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-prefix-fg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-input-fg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-active-bg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-focused-bg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-normal-bg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-prefix-bg", "")) {
-        }
-        else if (compareArgument(argv[i], "--color-input-bg", "")) {
-        }
-        else {
-            return 2;
-        }
+        if (!found) return 2;
     }
     return 0;
 }
@@ -489,5 +479,13 @@ void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t
         if (g_draw_inverted) move(aux::getRows() - 1 - printline++, 0);
         else move(printline++, 0);
         printBlank();
+    }
+}
+
+void printHelp() {
+    std::cout << g_helptext << std::endl;
+    for (auto i = 0; i < g_args_size; ++i) {
+        std::cout << g_args[i].args << " or " << g_args[i].argl << std::endl;
+        std::cout << "    " << g_args[i].description << std::endl << std::endl;
     }
 }
