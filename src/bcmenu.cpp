@@ -84,12 +84,9 @@ struct Argument {
     std::string description;
     std::function<int ()> func;
 };
-size_t g_args_size = 23;
+size_t g_args_size = 22;
 Argument g_args[] = {
-    { "-h", "--help", "Prints this help text.", [&]() {
-        return 2;
-        }}
-    , { "--ignore-case", "-ic", "Ignores case completely.", [&]() {
+    { "--ignore-case", "-ic", "Ignores case completely.", [&]() {
         g_case = TypeCase::Ignore;
         return 0;
         }}
