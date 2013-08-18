@@ -164,6 +164,7 @@ Argument g_args[] = {
 };
 
 int main(int argc, char* argv[]) {
+    setlocale(LC_CTYPE, "");
     int re = parseArguments(argc, argv);
     if (re == 2) printHelp();
     if (re != 0) {
@@ -174,6 +175,7 @@ int main(int argc, char* argv[]) {
     readIn(lines);
     bool rval = takeInput(lines);
     return rval;
+    return 0;
 }
 
 int parseArguments(int argc, char* argv[]) {
@@ -197,10 +199,10 @@ int parseArguments(int argc, char* argv[]) {
 }
 
 void readIn(std::deque<std::wstring>& lines) {
-    std::string temp;
-    while (getline(std::cin, temp)) {
-        if (temp == ".") continue;
-        lines.push_front(aux::stringToWideString(temp));
+    std::wstring temp;
+    while (std::getline(std::wcin, temp)) {
+        if (temp == L".") continue;
+        lines.push_front(temp);
     }
 }
 
@@ -296,17 +298,16 @@ int takeInput(const std::deque<std::wstring>& lines) {
 
 int fetchKey() {
     nodelay(stdscr, false);
-    // wint_t ch;
-    // int key = get_wch(&ch);
-    // key = ch;
-    int key = getch();
+    wint_t ch;
+    int key = get_wch(&ch);
+    key = ch;
+    // int key = getch();
     nodelay(stdscr, true);
     return key;
 }
 
 void initCurses() {
     freopen("/dev/tty", "rw", stdin);
-    setlocale(LC_CTYPE, "");
     initscr();
     raw();
     noecho();
