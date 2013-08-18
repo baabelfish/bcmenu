@@ -42,8 +42,6 @@ void matchFuzzy(const std::wstring& input, std::multimap<unsigned, size_t>& choi
 void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         , const std::deque<std::wstring>& lines);
 void printInput(int line, const std::wstring& input);
-// void printOptions(const std::deque<std::wstring>& lines, const std::multimap<unsigned, size_t>& options
-//         , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
 void printChoices(const std::deque<std::wstring>& lines, const std::deque<size_t>& choices
         , int selected, const std::set<int>& multiple);
 void printHelp();
@@ -186,7 +184,6 @@ int main(int argc, char* argv[]) {
     g_tempfile = argv[1];
     std::deque<std::wstring> lines;
     readIn(lines);
-    // return 0;
     bool rval = takeInput(lines);
     return rval;
 }
@@ -216,11 +213,7 @@ void readIn(std::deque<std::wstring>& lines) {
     while (std::getline(std::wcin, temp)) {
         if (temp == L".") continue;
         lines.push_front(temp);
-        // if (matchStraight(L"configu", temp)) lines.push_front(temp);
     }
-    // for (auto& x : lines) {
-    //     std::wcout << x << std::endl;
-    // }
 }
 
 bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second) {
@@ -313,7 +306,6 @@ int fetchKey() {
     wint_t ch;
     int key = get_wch(&ch);
     key = ch;
-    // int key = getch();
     nodelay(stdscr, true);
     return key;
 }
