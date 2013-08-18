@@ -1,4 +1,4 @@
-// #include "../config.h"
+#include "../config.h"
 
 #if defined(USING_NCURSESW_CURSES_H)
 #include <ncursesw/curses.h>
