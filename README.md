@@ -34,8 +34,7 @@ Keybindings
 - `C-p` Previous match.
 - `C-w` Clears the search.
 - `C-c` Normal interrupt (result is not saved).
-- `C-o` Add focused item to selection.
-- `C-i` Deselect focused item.
+- `C-o` Toggles selection.
 
 Examples
 --------
