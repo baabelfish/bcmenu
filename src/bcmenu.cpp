@@ -1,4 +1,6 @@
 #include <curses.h>
+#include <regex>
+#include <map>
 #include <deque>
 #include <set>
 #include <locale>
@@ -14,6 +16,7 @@ enum class MatchAlgorithm {
     Exact
     , SimpleFuzzy
     , Fuzzy
+    , Regex
 };
 enum class TypeCase {
     Exact = 0
@@ -21,12 +24,13 @@ enum class TypeCase {
     , Smart
 };
 
+static bool g_debug = false;
 static bool g_draw_inverted = false;
 static bool g_has_upper = false;
 static std::string g_tempfile;
 static std::wstring g_prompt = L":";
 static TypeCase g_case = TypeCase::Smart;
-static MatchAlgorithm g_algorithm;
+static MatchAlgorithm g_algorithm = MatchAlgorithm::SimpleFuzzy;
 
 static const std::string g_helptext =
 "Usage: bcmenu [OPTIONS] <<< PIPE\n\
@@ -79,6 +83,9 @@ Options:\n\
 --color-input-bg\n\
     These are used to control colors. [TODO]\n\
 \n\
+--debug \n\
+    Shows debug info when possible.\n\
+\n\
 \n\
 Keybindings:\n\
 ------------\n\
@@ -103,9 +110,13 @@ void printLine(std::wstring str);
 void readIn(std::deque<std::wstring>& lines);
 bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second);
 bool matchCharacter(wchar_t a, wchar_t b);
+void matchFuzzy(const std::wstring& input, std::multimap<unsigned, size_t>& choices
+        , const std::deque<std::wstring>& lines);
 void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         , const std::deque<std::wstring>& lines);
 void printInput(int line, const std::wstring& input);
+void printOptions(const std::deque<std::wstring>& lines, const std::multimap<unsigned, size_t>& options
+        , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
 void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options
         , int line_top, int line_bottom, int selected, const std::set<int>& multiple);
 
@@ -120,6 +131,7 @@ int main(int argc, char* argv[]) {
     readIn(lines);
     bool rval = takeInput(lines);
     return rval;
+    return true;
 }
 
 int parseArguments(int argc, char* argv[]) {
@@ -143,6 +155,9 @@ int parseArguments(int argc, char* argv[]) {
         else if (compareArgument(argv[i], "--exact", "-e")) {
             g_algorithm = MatchAlgorithm::Exact;
         }
+        else if (compareArgument(argv[i], "--regex", "-r")) {
+            g_algorithm = MatchAlgorithm::Fuzzy;
+        }
         else if (compareArgument(argv[i], "--fuzzy", "-f")) {
             g_algorithm = MatchAlgorithm::Fuzzy;
         }
@@ -158,6 +173,11 @@ int parseArguments(int argc, char* argv[]) {
         else if (compareArgument(argv[i], "--prompt", "-p")) {
             if (!aux::parseNext(argc, argv, i, 1, options) || options.size() != 1) return 2;
             else g_prompt = aux::stringToWideString(options[0]);
+        }
+        else if (compareArgument(argv[i], "--debug", "")) {
+            g_debug = true;
+        }
+        else if (compareArgument(argv[i], "--focus-prefix", "")) {
         }
         else if (compareArgument(argv[i], "--focus-prefix", "")) {
         }
@@ -204,17 +224,24 @@ int takeInput(const std::deque<std::wstring>& lines) {
     if (lines.empty()) return 1;
     initCurses();
     std::deque<size_t> choices;
+    std::multimap<unsigned, size_t> pri_choices;
     std::set<int> selected;
     std::wstring input;
     std::wstring final_choice;
     int key = 0;
     bool done = false;
     bool interrupt = false;
+    bool needs_match = true;
     int choice = 0;
 
     while (!done) {
         if (choice > choices.size() - 1) choice = choices.size() - 1;
-        matchInputToLines(input, choices, lines);
+        // matchFuzzy(input, pri_choices, lines);
+        if (needs_match) {
+            matchInputToLines(input, choices, lines);
+            needs_match = false;
+        }
+        // printOptions(lines, pri_choices, 1, aux::getRows(), choice, selected);
         printOptions(lines, choices, 1, aux::getRows(), choice, selected);
         printInput(0, input);
         refresh();
@@ -234,6 +261,7 @@ int takeInput(const std::deque<std::wstring>& lines) {
             case KEY_BACKSPACE:
             case 127:
                 if (!input.empty()) input = input.substr(0, input.size() - 1);
+                needs_match = true;
                 break;
             case '\r':
             case '\n':
@@ -257,11 +285,13 @@ int takeInput(const std::deque<std::wstring>& lines) {
             case 23:
                 choice = 0;
                 input.clear();
+                needs_match = true;
                 break;
             case -1:
                 break;
             default:
                 if (!(1 <= key && key <= 31)) input += key;
+                needs_match = true;
                 break;
         }
     }
@@ -324,6 +354,13 @@ void printBlank() {
     printLine(str);
 }
 
+bool matchRegex(const std::wstring& input, const std::wstring& result) {
+    if (std::regex_match(result, std::wregex(input))) {
+        return true;
+    }
+    return false;
+}
+
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
     size_t iinput = 0;
     for (auto i = 0; i < result.size(); ++i) {
@@ -348,6 +385,27 @@ bool matchCharacter(wchar_t a, wchar_t b) {
     else return a == b;
 }
 
+void matchFuzzy(const std::wstring& input, std::multimap<unsigned, size_t>& choices
+        , const std::deque<std::wstring>& lines) {
+    if (g_case == TypeCase::Smart) {
+        g_has_upper = false;
+        for (auto& x : input) {
+            if (isupper(x)) {
+                g_has_upper = true;
+                break;
+            }
+        }
+    }
+
+    choices.clear();
+    for (size_t i = 0; i < lines.size(); ++i) {
+        unsigned distance = aux::distance(input, lines[i]);
+        if (distance != -1) {
+            choices.insert(std::pair<unsigned, size_t>(distance, i));
+        }
+    }
+}
+
 void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         , const std::deque<std::wstring>& lines) {
     if (g_case == TypeCase::Smart) {
@@ -362,11 +420,18 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
 
     choices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
-        if (lines[i].find(input) != -1) {
-            choices.push_front(i);
+        if (g_algorithm == MatchAlgorithm::Regex) {
+            if (matchRegex(input, lines[i])) {
+                choices.push_back(i);
+            }
         }
-        else if (matchStraight(input, lines[i])) {
-            choices.push_back(i);
+        else if (g_algorithm == MatchAlgorithm::SimpleFuzzy) {
+            if (lines[i].find(input) != -1) {
+                choices.push_front(i);
+            }
+            else if (matchStraight(input, lines[i])) {
+                choices.push_back(i);
+            }
         }
     }
 }
@@ -376,6 +441,24 @@ void printInput(int line, const std::wstring& input) {
     move(line, 0);
     aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
     printLine(g_prompt + input);
+}
+
+void printOptions(const std::deque<std::wstring>& lines, const std::multimap<unsigned, size_t>& options
+        , int line_top, int line_bottom, int selected, const std::set<int>& multiple) {
+    int printline = 1;
+    for (auto it = options.begin(); it != options.end() && printline < line_bottom - line_top; ++it) {
+        if (g_draw_inverted) move(aux::getRows() - 1 - printline++, 0);
+        else move(printline++, 0);
+        aux::setColor(Color::WHITE, Color::TRANSPARENT);
+        if (g_debug) printLine(aux::toWideString(it->first) + L"  " + lines[it->second]);
+        else printLine(L"  " + lines[it->second]);
+    }
+    aux::setColor(Color::WHITE, Color::TRANSPARENT);
+    for (auto i = printline; i < line_bottom - line_top; ++i) {
+        if (g_draw_inverted) move(aux::getRows() - 1 - printline++, 0);
+        else move(printline++, 0);
+        printBlank();
+    }
 }
 
 void printOptions(const std::deque<std::wstring>& lines, const std::deque<size_t>& options

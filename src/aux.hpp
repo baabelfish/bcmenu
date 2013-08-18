@@ -28,6 +28,13 @@ static const int COLOR_MODIFIER = 15;
 }
 
 namespace aux {
+template <class T>
+std::wstring toWideString(T value) {
+    std::wstringstream ws;
+    ws << value;
+    return ws.str();
+}
+
 /**
  * @brief Parses argument parameters to strings. It automatically increases the argument index.
  * It also parses quotes.
@@ -57,5 +64,8 @@ int getCols();
 int getRows();
 
 void setColor(int fg, int bg);
+
+// This is just a test
+unsigned distance(const std::wstring& input, const std::wstring& tcmp);
 // void clearSurroundingWhitespace(std::string& str);
 } // namespace aux
