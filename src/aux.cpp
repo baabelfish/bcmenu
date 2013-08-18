@@ -1,5 +1,6 @@
 #include "aux.hpp"
 #include <curses.h>
+#include <cmath>
 
 namespace aux {
 
@@ -75,38 +76,32 @@ unsigned distance(const std::wstring& input, const std::wstring& tcmp) {
     unsigned score = index_start;
 
     for (auto i = 1; i < input.size(); ++i) {
-        unsigned left_score = 0;
-        unsigned right_score = 0;
-
-        // Left side
-        int lmove = 0;
-        for (auto j = index_start - 1; j >= 0; --j) {
-            ++lmove;
-            if (tcmp[j] == input[i]) break;
-            else if (tcmp[j] == L' ') left_score += 2;
-            else if (i == 0) lmove = 0;
-            else left_score += 1;
-        }
-        // Right side
-        int rmove = 0;
-        for (auto j = index_start + 1; j < tcmp.size(); ++j) {
-            ++rmove;
-            if (tcmp[j] == input[i]) break;
-            else if (tcmp[j] == L' ') right_score += 2;
-            else if (i == tcmp.size() - 1) rmove = 0;
-            else right_score += 1;
-        }
-
-        if (rmove == 0 && lmove == 0) score += tcmp.size() * 2;
-        if (left_score < right_score) {
-            score += left_score;
-            index_start -= lmove;
-        }
-        else {
-            score += right_score;
-            index_start += rmove;
-        }
+        size_t nindex = closestIndex(input, index_start,  input[i]);
+        score += (nindex != -1)
+            ? std::abs(static_cast<int>(nindex) - static_cast<int>(index_start))
+            : tcmp.size() * 2;
+        index_start = nindex;
     }
     return score;
+}
+
+size_t closestIndex(const std::wstring& str, size_t index, wchar_t ch) {
+    int litr = index - 1;
+    int ritr = index + 1;
+    int tindex = -1;
+
+    while (litr >= 0 || ritr < str.size() - 1) {
+        if (ritr < str.size() - 1 && str[ritr] == ch) {
+            tindex = index + ritr;
+            break;
+        }
+        else if (litr >= 0 && str[litr] == ch) {
+            tindex = index - litr;
+            break;
+        }
+        ++ritr;
+        --litr;
+    }
+    return tindex;
 }
 } // namespace aux

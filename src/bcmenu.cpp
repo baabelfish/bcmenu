@@ -18,6 +18,7 @@ enum class MatchAlgorithm {
     , Fuzzy
     , Regex
 };
+
 enum class TypeCase {
     Exact = 0
     , Ignore
@@ -236,9 +237,9 @@ int takeInput(const std::deque<std::wstring>& lines) {
 
     while (!done) {
         if (choice > choices.size() - 1) choice = choices.size() - 1;
-        // matchFuzzy(input, pri_choices, lines);
         if (needs_match) {
             matchInputToLines(input, choices, lines);
+            // matchFuzzy(input, pri_choices, lines);
             needs_match = false;
         }
         // printOptions(lines, pri_choices, 1, aux::getRows(), choice, selected);
@@ -420,18 +421,20 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
 
     choices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
-        if (g_algorithm == MatchAlgorithm::Regex) {
-            if (matchRegex(input, lines[i])) {
-                choices.push_back(i);
-            }
-        }
-        else if (g_algorithm == MatchAlgorithm::SimpleFuzzy) {
-            if (lines[i].find(input) != -1) {
-                choices.push_front(i);
-            }
-            else if (matchStraight(input, lines[i])) {
-                choices.push_back(i);
-            }
+        switch (g_algorithm) {
+            case MatchAlgorithm::Regex:
+                if (matchRegex(input, lines[i])) choices.push_back(i);
+                break;
+            case MatchAlgorithm::Exact:
+                break;
+            case MatchAlgorithm::SimpleFuzzy:
+                if (lines[i].find(input) != -1) choices.push_front(i);
+                else if (matchStraight(input, lines[i])) choices.push_back(i);
+                break;
+            case MatchAlgorithm::Fuzzy:
+                break;
+            default:
+                break;
         }
     }
 }

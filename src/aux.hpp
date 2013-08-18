@@ -67,5 +67,7 @@ void setColor(int fg, int bg);
 
 // This is just a test
 unsigned distance(const std::wstring& input, const std::wstring& tcmp);
+
+size_t closestIndex(const std::wstring& str, size_t index, wchar_t ch);
 // void clearSurroundingWhitespace(std::string& str);
 } // namespace aux
