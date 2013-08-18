@@ -95,7 +95,7 @@ struct Argument {
     std::string description;
     std::function<int ()> func;
 };
-size_t g_args_size = 22;
+
 Argument g_args[] = {
     { "--ignore-case", "-ic", "Ignores case completely.", [&]() {
         g_case = TypeCase::Ignore;
@@ -173,6 +173,7 @@ Argument g_args[] = {
         return 0;
         }}
 };
+static const size_t g_args_size = sizeof(g_args) / sizeof(Argument);
 
 int main(int argc, char* argv[]) {
     setlocale(LC_CTYPE, "");
