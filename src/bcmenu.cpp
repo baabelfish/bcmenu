@@ -91,20 +91,20 @@ Argument g_args[] = {
         return 0;
         }}
     , { "--smart-case", "-sc", "Ignores case until user presses an uppercase key. [Default]", [&]() {
-        return 0;
         g_case = TypeCase::Smart;
+        return 0;
         }}
     , { "--exact-case", "-ec", "Matches characters exactly.", [&]() {
-        return 0;
         g_case = TypeCase::Exact;
+        return 0;
         }}
     , { "--exact", "-e", "Uses exact match as algorithm.", [&]() {
-        return 0;
         g_algorithm = MatchAlgorithm::Exact;
+        return 0;
         }}
     , { "--regex", "-r", "Matches with regex. [Todo]", [&]() {
-        return 0;
         g_algorithm = MatchAlgorithm::Regex;
+        return 0;
         }}
     , { "--fuzzy", "-f", "Uses real fuzzy matching. [Todo]", [&]() {
         g_algorithm = MatchAlgorithm::Fuzzy;
