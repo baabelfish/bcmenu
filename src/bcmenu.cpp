@@ -296,9 +296,10 @@ int takeInput(const std::deque<std::wstring>& lines) {
 
 int fetchKey() {
     nodelay(stdscr, false);
-    wint_t ch;
-    int key = get_wch(&ch);
-    key = ch;
+    // wint_t ch;
+    // int key = get_wch(&ch);
+    // key = ch;
+    int key = getch();
     nodelay(stdscr, true);
     return key;
 }
