@@ -60,6 +60,8 @@ TODO
 - Show selected characters underlined in search.
 - Make options scroll with focused item.
 - Add regex support.
+- Add threaded matching as an option.
+- Add one line support.
 
 ### Done
 - Fix pipe and get rid of bcmenu\_result.
