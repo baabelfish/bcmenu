@@ -64,6 +64,19 @@ static std::string g_tempfile;
 static std::wstring g_prompt = L":";
 static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm = MatchAlgorithm::SimpleFuzzy;
+static size_t g_match_max_chars = 0;
+static int g_color_active_fg = Color::TRANSPARENT;
+static int g_color_focused_fg = Color::BRIGHT_GREEN;
+static int g_color_selected_fg = Color::GREEN;
+static int g_color_normal_fg = Color::WHITE;
+static int g_color_prefix_fg = Color::GREEN;
+static int g_color_input_fg = Color::BRIGHT_GREEN;
+static int g_color_active_bg = Color::TRANSPARENT;
+static int g_color_focused_bg = Color::TRANSPARENT;
+static int g_color_selected_bg = Color::TRANSPARENT;
+static int g_color_normal_bg = Color::TRANSPARENT;
+static int g_color_prefix_bg = Color::TRANSPARENT;
+static int g_color_input_bg = Color::TRANSPARENT;
 
 static const std::string g_helptext =
 "Usage: bcmenu [OPTIONS] <<< PIPE\n\
@@ -137,10 +150,7 @@ Argument g_args[] = {
     , { "--focus-prefix", "", "", [&]() {
         return 0;
         }}
-    , { "--focus-prefix", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-active-fg", "", "", [&]() {
+    , { "--color-selected-fg", "", "", [&]() {
         return 0;
         }}
     , { "--color-focused-fg", "", "", [&]() {
@@ -155,7 +165,7 @@ Argument g_args[] = {
     , { "--color-input-fg", "", "", [&]() {
         return 0;
         }}
-    , { "--color-active-bg", "", "", [&]() {
+    , { "--color-selected-bg", "", "", [&]() {
         return 0;
         }}
     , { "--color-focused-bg", "", "", [&]() {
@@ -234,7 +244,6 @@ int takeInput(const std::deque<std::wstring>& lines) {
     int choice = 0;
 
     while (!done) {
-        clear();
         if (choice > choices.size() - 1) choice = choices.size() - 1;
         if (needs_match) {
             matchInputToLines(input, choices, lines);
@@ -251,42 +260,42 @@ int takeInput(const std::deque<std::wstring>& lines) {
         }
 
         switch (key) {
-            case 3:
-                done = true;
-                interrupt = true;
-                break;
-            case KEY_BACKSPACE:
-            case 127:
-                if (!input.empty()) input = input.substr(0, input.size() - 1);
-                needs_match = true;
-                break;
-            case '\r':
-            case '\n':
-                if (!choices.empty() && !lines.empty() && choice < choices.size())
-                    final_choice = lines[choices[choice]];
-                done = true;
-                break;
-            case 14:
-                if ((unsigned)choice < choices.size() - 1) ++choice;
-                break;
-            case 16:
-                if (choice > 0) --choice;
-                break;
-            case 15:
-                if (selected.find(choices[choice]) != selected.end()) selected.erase(selected.find(choices[choice]));
-                else selected.insert(choices[choice]);
-                break;
-            case 23:
-                choice = 0;
-                input.clear();
-                needs_match = true;
-                break;
-            case -1:
-                break;
-            default:
-                if (!(1 <= key && key <= 31)) input += key;
-                needs_match = true;
-                break;
+        case 3:
+            done = true;
+            interrupt = true;
+            break;
+        case KEY_BACKSPACE:
+        case 127:
+            if (!input.empty()) input = input.substr(0, input.size() - 1);
+            needs_match = true;
+            break;
+        case '\r':
+        case '\n':
+            if (!choices.empty() && !lines.empty() && choice < choices.size())
+                final_choice = lines[choices[choice]];
+            done = true;
+            break;
+        case 14:
+            if ((unsigned)choice < choices.size() - 1) ++choice;
+            break;
+        case 16:
+            if (choice > 0) --choice;
+            break;
+        case 15:
+            if (selected.find(choices[choice]) != selected.end()) selected.erase(selected.find(choices[choice]));
+            else selected.insert(choices[choice]);
+            break;
+        case 23:
+            choice = 0;
+            input.clear();
+            needs_match = true;
+            break;
+        case -1:
+            break;
+        default:
+            if (!(1 <= key && key <= 31)) input += key;
+            needs_match = true;
+            break;
         }
     }
 
@@ -348,6 +357,7 @@ void printBlank() {
         str += L' ';
     }
     str += L'\n';
+    aux::setColor(Color::TRANSPARENT, Color::TRANSPARENT);
     printLine(str);
 }
 
@@ -358,7 +368,8 @@ bool matchRegex(const std::wstring& input, const std::wstring& result) {
 
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
     size_t iinput = 0;
-    for (auto i = 0; i < result.size(); ++i) {
+    size_t amount = g_match_max_chars == 0 ? result.size() : g_match_max_chars;
+    for (auto i = 0; i < amount; ++i) {
         if (matchCharacter(input[iinput], result[i])) ++iinput;
         if (iinput == input.size()) return true;
     }
@@ -417,7 +428,7 @@ void printInput(const std::wstring& input) {
     int line = 0;
     if (g_draw_inverted) line = aux::getRows() - 1;
     move(line, 0);
-    aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
+    aux::setColor(g_color_input_fg, g_color_input_bg);
     printLine(g_prompt + input);
 }
 
@@ -426,20 +437,25 @@ void printChoices(const std::deque<std::wstring>& lines, const std::deque<size_t
     for (auto i = 0; i < choices.size() && i < aux::getRows() - 1; ++i) {
         if (g_draw_inverted) move(aux::getRows() - 2 - i, 0);
         else move(i + 1, 0);
-
         if (selected == i) {
-            aux::setColor(Color::BRIGHT_GREEN, Color::TRANSPARENT);
+            aux::setColor(g_color_focused_fg, g_color_focused_bg);
             if (multiple.find(choices[i]) != multiple.end()) printLine(L"*>" + lines[choices[i]]);
             else printLine(L"> " + lines[choices[i]]);
         }
         else if (multiple.find(choices[i]) != multiple.end()) {
-            aux::setColor(Color::GREEN, Color::TRANSPARENT);
+            aux::setColor(g_color_selected_fg, g_color_selected_bg);
             printLine(L"*>" + lines[choices[i]]);
         }
         else {
-            aux::setColor(Color::WHITE, Color::TRANSPARENT);
+            aux::setColor(g_color_normal_fg, g_color_normal_bg);
             printLine(L"  " + lines[choices[i]]);
         }
+    }
+
+    for (auto i = choices.size(); i < aux::getRows() - 1; ++i) {
+        if (g_draw_inverted) move(aux::getRows() - 2 - i, 0);
+        else move(i + 1, 0);
+        printBlank();
     }
 }
 
