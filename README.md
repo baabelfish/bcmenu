@@ -62,6 +62,8 @@ TODO
 - Add regex support.
 - Add threaded matching as an option.
 - Add one line support.
+- Add an option to remember last search.
+
 
 ### Done
 - Fix pipe and get rid of bcmenu\_result.
