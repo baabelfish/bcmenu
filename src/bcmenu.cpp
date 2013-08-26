@@ -64,7 +64,8 @@ static std::string g_tempfile;
 static std::wstring g_prompt = L":";
 static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm = MatchAlgorithm::SimpleFuzzy;
-static size_t g_match_max_chars = 0;
+static size_t g_matchindex_start = 0;
+static size_t g_matchindex_end = -1;
 static int g_color_active_fg = Color::TRANSPARENT;
 static int g_color_focused_fg = Color::BRIGHT_GREEN;
 static int g_color_selected_fg = Color::GREEN;
@@ -108,82 +109,71 @@ struct Argument {
     std::string argl;
     std::string args;
     std::string description;
-    std::function<int ()> func;
+    int rval;
+    std::function<void (int&, int, char**)> func;
 };
 
 Argument g_args[] = {
-    { "--ignore-case", "-ic", "Ignores case completely.", [&]() {
+    { "--ignore-case", "-ic", "Ignores case completely.", 0, [&](int&, int, char**) {
         g_case = TypeCase::Ignore;
-        return 0;
-        }}
-    , { "--smart-case", "-sc", "Ignores case until user presses an uppercase key. [Default]", [&]() {
+    }},
+    { "--smart-case", "-sc", "Ignores case until user presses an uppercase key. [Default]", 0, [&](int&, int, char**) {
         g_case = TypeCase::Smart;
-        return 0;
-        }}
-    , { "--exact-case", "-ec", "Matches characters exactly.", [&]() {
+    }},
+    { "--exact-case", "-ec", "Matches characters exactly.", 0, [&](int&, int, char**) {
         g_case = TypeCase::Exact;
-        return 0;
-        }}
-    , { "--exact", "-e", "Uses exact match as algorithm.", [&]() {
+    }},
+    { "--exact", "-e", "Uses exact match as algorithm.", 0, [&](int&, int, char**) {
         g_algorithm = MatchAlgorithm::Exact;
-        return 0;
-        }}
-    , { "--regex", "-r", "Matches with regex. [Todo]", [&]() {
+    }},
+    { "--regex", "-r", "Matches with regex. [Todo]", 0, [&](int&, int, char**) {
         g_algorithm = MatchAlgorithm::Regex;
-        return 0;
-        }}
-    , { "--fuzzy", "-f", "Uses real fuzzy matching. [Todo]", [&]() {
+    }},
+    { "--fuzzy", "-f", "Uses real fuzzy matching. [Todo]", 0, [&](int&, int, char**) {
         g_algorithm = MatchAlgorithm::Fuzzy;
-        return 0;
-        }}
-    , { "--simplyfuzzy", "-sf", "Uses a naive matching algorithm. [Default]", [&]() {
+    }},
+    { "--simplyfuzzy", "-sf", "Uses a naive matching algorithm. [Default]", 0, [&](int&, int, char**) {
         g_algorithm = MatchAlgorithm::SimpleFuzzy;
-        return 0;
-        }}
-    , { "--bottom", "-b", "Draws prompt to the bottom of the screen.", [&]() {
+    }},
+    { "--prompt", "-p", "Sets prompt. (Default: \':\')", 0, [&](int& selected, int argc, char** argv) {
+        if (++selected < argc) g_prompt = aux::stringToWideString(argv[selected]);
+    }},
+    { "--bottom", "-b", "Draws everything horizontally inverted.", 0, [&](int&, int, char**) {
         g_draw_inverted = true;
-        return 0;
-        }}
-    , { "--help", "-h", "Prints this helptext.", [&]() {
-        return 2;
-        }}
-    , { "--debug", "", "Shows possible debug information.", [&]() {
+    }},
+    { "--help", "-h", "Prints this helptext.", 2, [&](int&, int, char**) {
+    }},
+    { "--debug", "", "Shows possible debug information.", 0, [&](int&, int, char**) {
         g_debug = true;
-        return 0;
-        }}
-    , { "--focus-prefix", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-selected-fg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-focused-fg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-normal-fg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-prefix-fg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-input-fg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-selected-bg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-focused-bg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-normal-bg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-prefix-bg", "", "", [&]() {
-        return 0;
-        }}
-    , { "--color-input-bg", "", "", [&]() {
-        return 0;
-        }}
+    }},
+    { "--start-index", "-s", "The minimum index of the string to use in match. (Default: 0)", 0, [&](int& selected, int argc, char** argv) {
+        if (++selected < argc) g_matchindex_start = std::atoi(argv[selected]);
+    }},
+    { "--end-index", "-e", "The maximum index of the string to use in match. (Default: The last index of the string)", 0, [&](int& selected, int argc, char** argv) {
+        if (++selected < argc) g_matchindex_end = std::atoi(argv[selected]);
+    }},
+    { "--focus-prefix", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-selected-fg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-focused-fg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-normal-fg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-prefix-fg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-input-fg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-selected-bg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-focused-bg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-normal-bg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-prefix-bg", "", "", 0, [&](int&, int, char**) {
+    }},
+    { "--color-input-bg", "", "", 0, [&](int&, int, char**) {
+    }}
 };
 static const size_t g_args_size = sizeof(g_args) / sizeof(Argument);
 
@@ -211,9 +201,9 @@ int parseArguments(int argc, char* argv[]) {
         bool found = false;
         for (int j = 0; j < g_args_size; ++j) {
             if (compareArgument(argv[i], g_args[j].args, g_args[j].argl)) {
-                int re = g_args[j].func();
+                g_args[j].func(i, argc, argv);
                 found = true;
-                if (re != 0) return re;
+                if (g_args[j].rval != 0) return g_args[j].rval;
             }
         }
         if (!found) return 2;
@@ -388,9 +378,11 @@ bool matchRegex(const std::wstring& input, const std::wstring& result) {
 
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
     size_t iinput = 0;
-    size_t amount = g_match_max_chars == 0 ? result.size() : g_match_max_chars;
+    size_t amount = g_matchindex_end == -1 || g_matchindex_end > result.size()
+        ? result.size()
+        : g_matchindex_end;
 
-    for (auto i = 0; i < amount; ++i) {
+    for (auto i = g_matchindex_start; i < amount; ++i) {
         if (matchCharacter(input[iinput], result[i])) ++iinput;
         if (iinput == input.size()) return true;
     }
