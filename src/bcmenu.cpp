@@ -62,6 +62,8 @@ static bool g_draw_inverted = false;
 static bool g_has_upper = false;
 static std::string g_tempfile;
 static std::wstring g_prompt = L":";
+static std::wstring g_prefix_focus = L">";
+static std::wstring g_prefix_selected = L"*";
 static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm = MatchAlgorithm::SimpleFuzzy;
 static size_t g_matchindex_start = 0;
@@ -141,8 +143,7 @@ Argument g_args[] = {
     { "--bottom", "-b", "Draws everything horizontally inverted.", 0, [&](int&, int, char**) {
         g_draw_inverted = true;
     }},
-    { "--help", "-h", "Prints this helptext.", 2, [&](int&, int, char**) {
-    }},
+    { "--help", "-h", "Prints this helptext.", 2, [&](int&, int, char**) {}},
     { "--debug", "", "Shows possible debug information.", 0, [&](int&, int, char**) {
         g_debug = true;
     }},
@@ -152,7 +153,19 @@ Argument g_args[] = {
     { "--end-index", "-e", "The maximum index of the string to use in match. (Default: The last index of the string)", 0, [&](int& selected, int argc, char** argv) {
         if (++selected < argc) g_matchindex_end = std::atoi(argv[selected]);
     }},
-    { "--focus-prefix", "", "", 0, [&](int&, int, char**) {
+    { "--prefix-focus", "-pf", "Prefix character for focused item in the view. (Only one character is allowed)", 0, [&](int& selected, int argc, char** argv) {
+        std::wstring prefix;
+        if (++selected < argc) {
+            prefix = aux::stringToWideString(argv[selected]);
+            if (prefix.size() == 1) g_prefix_focus = prefix;
+        }
+    }},
+    { "--prefix-selected", "-ps", "Prefix character to selected items. (Only one character is allowed)", 0, [&](int& selected, int argc, char** argv) {
+        std::wstring prefix;
+        if (++selected < argc) {
+            prefix = aux::stringToWideString(argv[selected]);
+            if (prefix.size() == 1) g_prefix_selected = prefix;
+        }
     }},
     { "--color-selected-fg", "", "", 0, [&](int&, int, char**) {
     }},
@@ -460,12 +473,12 @@ void printChoices(const std::deque<std::wstring>& lines, const std::deque<size_t
 
         if (selected == indexer) {
             aux::setColor(g_color_focused_fg, g_color_focused_bg);
-            if (multiple.find(choices[indexer]) != multiple.end()) printLine(L"*>" + lines[choices[indexer]]);
-            else printLine(L"> " + lines[choices[indexer]]);
+            if (multiple.find(choices[indexer]) != multiple.end()) printLine(g_prefix_focus + g_prefix_selected + lines[choices[indexer]]);
+            else printLine(g_prefix_focus + L" " + lines[choices[indexer]]);
         }
-        else if (multiple.find(choices[i]) != multiple.end()) {
+        else if (multiple.find(choices[indexer]) != multiple.end()) {
             aux::setColor(g_color_selected_fg, g_color_selected_bg);
-            printLine(L"*>" + lines[choices[indexer]]);
+            printLine(L" " + g_prefix_selected + lines[choices[indexer]]);
         }
         else {
             aux::setColor(g_color_normal_fg, g_color_normal_bg);

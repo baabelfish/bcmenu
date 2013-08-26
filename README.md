@@ -61,10 +61,10 @@ TODO
 - Add search ranges.
 - Add an option to remember last search.
 - Add threaded matching as an option.
+- Support wide arguments.
 - Add one line support.
 - Add regex support.
 - Add colors.
-- Make characters customizable.
 - Show selected characters underlined in search.
 - Write more match functions (including a proper fuzzy match).
 
