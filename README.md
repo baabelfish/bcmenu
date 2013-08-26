@@ -68,12 +68,6 @@ TODO
 - Write more match functions (including a proper fuzzy match).
 
 
-### Done
-- Fix pipe and get rid of bcmenu\_result.
-- Add support for multiple selection.
-- Remember terminal screen.
-- Make options scroll with focused item.
-
 Similar software
 ----------------
 [slmenu](https://bitbucket.org/rafaelgg/slmenu)
