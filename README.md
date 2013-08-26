@@ -35,6 +35,10 @@ Keybindings
 - `C-w` Clears the search.
 - `C-c` Normal interrupt (result is not saved).
 - `C-o` Toggles selection.
+- `C-u` Move page up.
+- `C-d` Move page down.
+- `C-b` Move to beginning.
+- `C-e` Move to end.
 
 Examples
 --------

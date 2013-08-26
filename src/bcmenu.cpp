@@ -94,6 +94,10 @@ C-w     Clears the search.\n\
 C-c     Normal interrupt (result is not saved).\n\
 C-o     Add focused item to selection.\n\
 C-i     Unselect focused item.\n\
+C-u     Move page up\n\
+C-d     Move page down\n\
+C-b     Move to beginning\n\
+C-e     Move to end\n\
 \n\
 \n\
 Arguments:\n\
@@ -273,17 +277,31 @@ int takeInput(const std::deque<std::wstring>& lines) {
                 final_choice = lines[choices[choice]];
             done = true;
             break;
-        case 14:
+        case 'b' - 96:
+            choice = 0;
+            break;
+        case 'e' - 96:
+            choice = choices.size() - 1;
+            break;
+        case 'u' - 96:
+            choice -= (aux::getRows() - 0) / 2;
+            if (choice < 0) choice = 0;
+            break;
+        case 'd' - 96:
+            choice += (aux::getRows() - 2) / 2;
+            if (choice > choices.size() - 2) choice = choices.size() - 1;
+            break;
+        case 'n' - 96:
             if ((unsigned)choice < choices.size() - 1) ++choice;
             break;
-        case 16:
+        case 'p' - 96:
             if (choice > 0) --choice;
             break;
-        case 15:
+        case 'o' - 96:
             if (selected.find(choices[choice]) != selected.end()) selected.erase(selected.find(choices[choice]));
             else selected.insert(choices[choice]);
             break;
-        case 23:
+        case 'w' - 96:
             choice = 0;
             input.clear();
             needs_match = true;
