@@ -82,7 +82,7 @@ static int g_color_prefix_bg = Color::TRANSPARENT;
 static int g_color_input_bg = Color::TRANSPARENT;
 
 static const std::string g_helptext =
-"Usage: bcmenu [OPTIONS] <<< PIPE\n\
+"Usage: <app>|bcmenu [OPTIONS]\n\
 \n\
 Bcmenu is a fuzzy menu for the terminal, made with ncurses.\n\
 \n\
