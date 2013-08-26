@@ -143,7 +143,7 @@ Argument g_args[] = {
     { "--bottom", "-b", "Draws everything horizontally inverted.", 0, [&](int&, int, char**) {
         g_draw_inverted = true;
     }},
-    { "--help", "-h", "Prints this helptext.", 2, [&](int&, int, char**) {}},
+    { "--help", "-h", "Prints this helptext.", 2, nullptr },
     { "--debug", "", "Shows possible debug information.", 0, [&](int&, int, char**) {
         g_debug = true;
     }},
@@ -214,7 +214,7 @@ int parseArguments(int argc, char* argv[]) {
         bool found = false;
         for (int j = 0; j < g_args_size; ++j) {
             if (compareArgument(argv[i], g_args[j].args, g_args[j].argl)) {
-                g_args[j].func(i, argc, argv);
+                if (g_args[j].func) g_args[j].func(i, argc, argv);
                 found = true;
                 if (g_args[j].rval != 0) return g_args[j].rval;
             }
