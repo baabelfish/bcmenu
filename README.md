@@ -58,21 +58,21 @@ $ sudo pacman -R $(pacman -Sl|grep '\[installed'|cut -f2 -d' '|sort|bcmenu|cut -
 
 TODO
 ----
-- Add colors.
-- Make characters customizable.
-- Write more match functions (including a proper fuzzy match).
-- Show selected characters underlined in search.
-- Make options scroll with focused item.
-- Add regex support.
+- Add an option to remember last search.
 - Add threaded matching as an option.
 - Add one line support.
-- Add an option to remember last search.
+- Add regex support.
+- Add colors.
+- Make characters customizable.
+- Show selected characters underlined in search.
+- Write more match functions (including a proper fuzzy match).
 
 
 ### Done
 - Fix pipe and get rid of bcmenu\_result.
 - Add support for multiple selection.
 - Remember terminal screen.
+- Make options scroll with focused item.
 
 Similar software
 ----------------
