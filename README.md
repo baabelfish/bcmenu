@@ -58,6 +58,7 @@ $ sudo pacman -R $(pacman -Sl|grep '\[installed'|cut -f2 -d' '|sort|bcmenu|cut -
 
 TODO
 ----
+- Add search ranges.
 - Add an option to remember last search.
 - Add threaded matching as an option.
 - Add one line support.
