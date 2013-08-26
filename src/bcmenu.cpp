@@ -96,8 +96,8 @@ C-o     Add focused item to selection.\n\
 C-i     Unselect focused item.\n\
 C-u     Move page up\n\
 C-d     Move page down\n\
-C-b     Move to beginning\n\
-C-e     Move to end\n\
+C-b     Move to first item\n\
+C-e     Move to last item\n\
 \n\
 \n\
 Arguments:\n\

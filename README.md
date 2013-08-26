@@ -37,8 +37,8 @@ Keybindings
 - `C-o` Toggles selection.
 - `C-u` Move page up.
 - `C-d` Move page down.
-- `C-b` Move to beginning.
-- `C-e` Move to end.
+- `C-b` Move to first item.
+- `C-e` Move to last item.
 
 Examples
 --------
