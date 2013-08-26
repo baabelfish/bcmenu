@@ -252,13 +252,11 @@ int takeInput(const std::deque<std::wstring>& lines) {
         printChoices(lines, choices, choice, selected);
         printInput(input);
         refresh();
-
         key = fetchKey();
         if (g_draw_inverted) {
             if (key == 14) key = 16;
             else if (key == 16) key = 14;
         }
-
         switch (key) {
         case 3:
             done = true;
@@ -300,6 +298,7 @@ int takeInput(const std::deque<std::wstring>& lines) {
     }
 
     endwin();
+
     if (!interrupt) {
         if (!selected.empty()) {
             for (auto it = selected.rbegin(); it != selected.rend(); ++it) {
@@ -338,6 +337,7 @@ void initCurses() {
 
 void printLine(std::wstring str) {
     int cols = aux::getCols();
+
     if (str.size() > (unsigned)cols) {
         str = str.substr(0, aux::getCols());
     }
@@ -347,6 +347,7 @@ void printLine(std::wstring str) {
             str += L' ';
         }
     }
+
     printw("%ls", str.c_str());
 }
 
@@ -357,7 +358,8 @@ void printBlank() {
         str += L' ';
     }
     str += L'\n';
-    aux::setColor(Color::TRANSPARENT, Color::TRANSPARENT);
+    // aux::setColor(Color::TRANSPARENT, Color::TRANSPARENT);
+    aux::attrReset();
     printLine(str);
 }
 
@@ -369,6 +371,7 @@ bool matchRegex(const std::wstring& input, const std::wstring& result) {
 bool matchStraight(const std::wstring& input, const std::wstring& result) {
     size_t iinput = 0;
     size_t amount = g_match_max_chars == 0 ? result.size() : g_match_max_chars;
+
     for (auto i = 0; i < amount; ++i) {
         if (matchCharacter(input[iinput], result[i])) ++iinput;
         if (iinput == input.size()) return true;
@@ -404,22 +407,23 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
     }
 
     choices.clear();
+
     for (size_t i = 0; i < lines.size(); ++i) {
         switch (g_algorithm) {
-            case MatchAlgorithm::Regex:
-                if (matchRegex(input, lines[i])) choices.push_back(i);
-                break;
-            case MatchAlgorithm::Exact:
-                if (lines[i].find(input) != -1) choices.push_front(i);
-                break;
-            case MatchAlgorithm::SimpleFuzzy:
-                if (lines[i].find(input) != -1) choices.push_front(i);
-                else if (matchStraight(input, lines[i])) choices.push_back(i);
-                break;
-            case MatchAlgorithm::Fuzzy:
-                break;
-            default:
-                break;
+        case MatchAlgorithm::Regex:
+            if (matchRegex(input, lines[i])) choices.push_back(i);
+            break;
+        case MatchAlgorithm::Exact:
+            if (lines[i].find(input) != -1) choices.push_front(i);
+            break;
+        case MatchAlgorithm::SimpleFuzzy:
+            if (lines[i].find(input) != -1) choices.push_front(i);
+            else if (matchStraight(input, lines[i])) choices.push_back(i);
+            break;
+        case MatchAlgorithm::Fuzzy:
+            break;
+        default:
+            break;
         }
     }
 }
@@ -434,21 +438,28 @@ void printInput(const std::wstring& input) {
 
 void printChoices(const std::deque<std::wstring>& lines, const std::deque<size_t>& choices, int selected, const std::set<int>& multiple) {
     if (choices.empty()) return;
-    for (auto i = 0; i < choices.size() && i < aux::getRows() - 1; ++i) {
+
+    int crows = aux::getRows() - 2;
+    int offset = selected > crows / 2 ? selected - crows / 2: 0;
+    if (selected > choices.size() - crows / 2) offset = choices.size() - crows - 1;
+
+    for (auto i = 0; i + offset < choices.size() && i < aux::getRows() - 1; ++i) {
         if (g_draw_inverted) move(aux::getRows() - 2 - i, 0);
         else move(i + 1, 0);
-        if (selected == i) {
+        int indexer = i + offset;
+
+        if (selected == indexer) {
             aux::setColor(g_color_focused_fg, g_color_focused_bg);
-            if (multiple.find(choices[i]) != multiple.end()) printLine(L"*>" + lines[choices[i]]);
-            else printLine(L"> " + lines[choices[i]]);
+            if (multiple.find(choices[indexer]) != multiple.end()) printLine(L"*>" + lines[choices[indexer]]);
+            else printLine(L"> " + lines[choices[indexer]]);
         }
         else if (multiple.find(choices[i]) != multiple.end()) {
             aux::setColor(g_color_selected_fg, g_color_selected_bg);
-            printLine(L"*>" + lines[choices[i]]);
+            printLine(L"*>" + lines[choices[indexer]]);
         }
         else {
             aux::setColor(g_color_normal_fg, g_color_normal_bg);
-            printLine(L"  " + lines[choices[i]]);
+            printLine(L"  " + lines[choices[indexer]]);
         }
     }
 
