@@ -104,4 +104,31 @@ size_t closestIndex(const std::wstring& str, size_t index, wchar_t ch) {
     }
     return tindex;
 }
+
+void printBlank() {
+    int cols = aux::getCols();
+    std::wstring str;
+    for (auto i = 0; i < cols; ++i) {
+        str += L' ';
+    }
+    str += L'\n';
+    // aux::setColor(Color::TRANSPARENT, Color::TRANSPARENT);
+    aux::attrReset();
+    printLine(str);
+}
+
+void printLine(std::wstring str) {
+    int cols = aux::getCols();
+    if (str.size() > (unsigned)cols) {
+        str = str.substr(0, aux::getCols());
+    }
+    else {
+        int amount = cols - str.size();
+        for (auto i = 0; i < amount; ++i) {
+            str += L' ';
+        }
+    }
+    printw("%ls", str.c_str());
+}
+
 } // namespace aux

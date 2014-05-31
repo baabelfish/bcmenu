@@ -24,7 +24,9 @@
 #include <vector>
 #include <cstring>
 #include <sstream>
+#include "../lib/cpputils/cu.hpp"
 #include "aux.hpp"
+#include <iostream>
 
 int parseArguments(int argc, char* argv[]);
 bool matchStraight(const std::wstring& input, const std::wstring& result);
@@ -61,9 +63,6 @@ static bool g_debug = false;
 static bool g_draw_inverted = false;
 static bool g_has_upper = false;
 static std::string g_tempfile;
-static std::wstring g_prompt = L":";
-static std::wstring g_prefix_focus = L">";
-static std::wstring g_prefix_selected = L"*";
 static TypeCase g_case = TypeCase::Smart;
 static MatchAlgorithm g_algorithm = MatchAlgorithm::SimpleFuzzy;
 static size_t g_matchindex_start = 0;
@@ -81,31 +80,6 @@ static int g_color_normal_bg = Color::TRANSPARENT;
 static int g_color_prefix_bg = Color::TRANSPARENT;
 static int g_color_input_bg = Color::TRANSPARENT;
 
-static const std::string g_helptext =
-"Usage: <app>|bcmenu [OPTIONS]\n\
-\n\
-Bcmenu is a fuzzy menu for the terminal, made with ncurses.\n\
-\n\
-\n\
-Keybindings:\n\
-------------\n\
-\n\
-Enter   Saves the result and exits the program.\n\
-C-n     Next match.\n\
-C-p     Previous match.\n\
-C-w     Clears the search.\n\
-C-c     Normal interrupt (result is not saved).\n\
-C-o     Add focused item to selection.\n\
-C-i     Unselect focused item.\n\
-C-u     Move page up\n\
-C-d     Move page down\n\
-C-b     Move to first item\n\
-C-e     Move to last item\n\
-\n\
-\n\
-Arguments:\n\
-----------\
-";
 
 struct Argument {
     std::string argl;
@@ -212,7 +186,7 @@ int parseArguments(int argc, char* argv[]) {
 
     for (auto i = 2; i < argc; ++i) {
         bool found = false;
-        for (int j = 0; j < g_args_size; ++j) {
+        for (std::size_t j = 0; j < g_args_size; ++j) {
             if (compareArgument(argv[i], g_args[j].args, g_args[j].argl)) {
                 if (g_args[j].func) g_args[j].func(i, argc, argv);
                 found = true;
@@ -222,14 +196,6 @@ int parseArguments(int argc, char* argv[]) {
         if (!found) return 2;
     }
     return 0;
-}
-
-void readIn(std::deque<std::wstring>& lines) {
-    std::wstring temp;
-    while (std::getline(std::wcin, temp)) {
-        if (temp == L".") continue;
-        lines.push_front(temp);
-    }
 }
 
 bool compareArgument(const char* arg, const std::string& choice_first, const std::string& choice_second) {
@@ -333,82 +299,9 @@ int takeInput(const std::deque<std::wstring>& lines) {
     return 0;
 }
 
-int fetchKey() {
-    nodelay(stdscr, false);
-    wint_t ch;
-    int key = get_wch(&ch);
-    key = ch;
-    nodelay(stdscr, true);
-    return key;
-}
-
-void initCurses() {
-    freopen("/dev/tty", "rw", stdin);
-    initscr();
-    raw();
-    noecho();
-    nodelay(stdscr, true);
-    wtimeout(stdscr, 10000);
-    keypad(stdscr, true);
-    use_default_colors();
-    start_color();
-    initPairs();
-    curs_set(0);
-}
-
-void printLine(std::wstring str) {
-    int cols = aux::getCols();
-
-    if (str.size() > (unsigned)cols) {
-        str = str.substr(0, aux::getCols());
-    }
-    else {
-        int amount = cols - str.size();
-        for (auto i = 0; i < amount; ++i) {
-            str += L' ';
-        }
-    }
-
-    printw("%ls", str.c_str());
-}
-
-void printBlank() {
-    int cols = aux::getCols();
-    std::wstring str;
-    for (auto i = 0; i < cols; ++i) {
-        str += L' ';
-    }
-    str += L'\n';
-    // aux::setColor(Color::TRANSPARENT, Color::TRANSPARENT);
-    aux::attrReset();
-    printLine(str);
-}
-
 bool matchRegex(const std::wstring& input, const std::wstring& result) {
     if (std::regex_match(result, std::wregex(input))) return true;
     return false;
-}
-
-bool matchStraight(const std::wstring& input, const std::wstring& result) {
-    size_t iinput = 0;
-    size_t amount = g_matchindex_end == -1 || g_matchindex_end > result.size()
-        ? result.size()
-        : g_matchindex_end;
-
-    for (auto i = g_matchindex_start; i < amount; ++i) {
-        if (matchCharacter(input[iinput], result[i])) ++iinput;
-        if (iinput == input.size()) return true;
-    }
-    return false;
-}
-
-void initPairs() {
-    for (int i = 0; i < Color::COLOR_MODIFIER; ++i) {
-        init_pair(Color::DEFAULT_OFFSET + i, i, -1);
-        for (int j = 0; j < Color::COLOR_MODIFIER; ++j) {
-            init_pair(i * Color::COLOR_MODIFIER + j, i, j);
-        }
-    }
 }
 
 bool matchCharacter(wchar_t a, wchar_t b) {
@@ -448,48 +341,6 @@ void matchInputToLines(const std::wstring& input, std::deque<size_t>& choices
         default:
             break;
         }
-    }
-}
-
-void printInput(const std::wstring& input) {
-    int line = 0;
-    if (g_draw_inverted) line = aux::getRows() - 1;
-    move(line, 0);
-    aux::setColor(g_color_input_fg, g_color_input_bg);
-    printLine(g_prompt + input);
-}
-
-void printChoices(const std::deque<std::wstring>& lines, const std::deque<size_t>& choices, int selected, const std::set<int>& multiple) {
-    if (choices.empty()) return;
-
-    int crows = aux::getRows() - 2;
-    int offset = selected > crows / 2 ? selected - crows / 2: 0;
-    if (selected > choices.size() - crows / 2) offset = choices.size() - crows - 1;
-
-    for (auto i = 0; i + offset < choices.size() && i < aux::getRows() - 1; ++i) {
-        if (g_draw_inverted) move(aux::getRows() - 2 - i, 0);
-        else move(i + 1, 0);
-        int indexer = i + offset;
-
-        if (selected == indexer) {
-            aux::setColor(g_color_focused_fg, g_color_focused_bg);
-            if (multiple.find(choices[indexer]) != multiple.end()) printLine(g_prefix_focus + g_prefix_selected + lines[choices[indexer]]);
-            else printLine(g_prefix_focus + L" " + lines[choices[indexer]]);
-        }
-        else if (multiple.find(choices[indexer]) != multiple.end()) {
-            aux::setColor(g_color_selected_fg, g_color_selected_bg);
-            printLine(L" " + g_prefix_selected + lines[choices[indexer]]);
-        }
-        else {
-            aux::setColor(g_color_normal_fg, g_color_normal_bg);
-            printLine(L"  " + lines[choices[indexer]]);
-        }
-    }
-
-    for (auto i = choices.size(); i < aux::getRows() - 1; ++i) {
-        if (g_draw_inverted) move(aux::getRows() - 2 - i, 0);
-        else move(i + 1, 0);
-        printBlank();
     }
 }
 

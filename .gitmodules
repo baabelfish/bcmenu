@@ -1,0 +1,3 @@
+[submodule "lib/cpputils"]
+	path = lib/cpputils
+	url = https://github.com/baabelfish/cpputils
