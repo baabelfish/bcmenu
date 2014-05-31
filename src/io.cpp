@@ -60,7 +60,6 @@ int IO::takeInput(std::vector<std::wstring>&& lines) {
 
     initCurses();
 
-    // std::set<int> selected;
     Matches matches(MatcherFuzzy(), std::move(lines));
     std::wstring input;
     bool done = false;
@@ -69,9 +68,7 @@ int IO::takeInput(std::vector<std::wstring>&& lines) {
     std::size_t choice = 0;
 
     while (!done) {
-        // if (choice > choices.size() - 1) choice = choices.size() - 1;
         if (needs_match) {
-            // TODO: TEE VERTAILU
             matches.match(input);
             needs_match = false;
         }
@@ -83,10 +80,7 @@ int IO::takeInput(std::vector<std::wstring>&& lines) {
         printInput(input);
         refresh();
         int key = fetchKey();
-        // if (g_draw_inverted) {
-            // if (key == 14) key = 16;
-            // else if (key == 16) key = 14;
-        // }
+
         switch (key) {
         case 3:
             done = true;
@@ -136,14 +130,7 @@ int IO::takeInput(std::vector<std::wstring>&& lines) {
     endwin();
 
     if (!interrupt) {
-        // if (!selected.empty()) {
-        //     for (auto it = selected.rbegin(); it != selected.rend(); ++it) {
-        //         std::wcerr << lines[*it] << std::endl;
-        //     }
-        // }
-        // else {
-        std::wcerr << matches.get(choice);
-        // }
+        std::wcerr << matches.get()[choice];
     }
 
     return 0;

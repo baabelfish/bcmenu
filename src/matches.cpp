@@ -7,36 +7,50 @@ Matches::Matches(Matcher matcher, std::vector<std::wstring>&& initial):
     m_matcher(matcher),
     m_old_input(L""),
     m_initial(std::move(initial)),
-    m_matches(m_initial) {}
+    m_matches() {
+    }
 
 Matches::~Matches() {}
 
 void Matches::match(std::wstring input) {
     if (input.empty()) {
-        m_matches = m_initial;
+        clearMatches();
     }
     else if (input != m_old_input) {
-        m_matches = doMatch(input, m_initial);
+        doMatch(input);
     }
 }
 
-void Matches::print(std::function<void(const decltype(m_matches)&)> f) const {
-    f(m_matches);
+void Matches::print(std::function<void(const std::vector<std::wstring>&)> f) {
+    accessMatches([&](decltype(m_matches)& matches){
+        f(cu::values(matches));
+    });
 }
 
-Matches::LineContainer Matches::doMatch(const std::wstring& input, const Matches::LineContainer& tested) {
-    std::multimap<int, std::wstring> mapped;
-    for (auto& x : tested) {
+void Matches::doMatch(const std::wstring& input) {
+    m_matches.clear();
+    for (auto& x : m_initial) {
         auto cost = m_matcher.match(x, input);
-        mapped.insert(std::make_pair(cost, x));
+        accessMatches([&](decltype(m_matches)& matches){
+            matches.insert(std::make_pair(cost, x));
+        });
     }
-    return cu::values(mapped);
 }
 
 std::size_t Matches::amount() const {
     return m_matches.size();
 }
 
-std::wstring Matches::get(std::size_t index) const {
-    return m_matches[index];
+std::vector<std::wstring> Matches::get() {
+    std::vector<std::wstring> x;
+    accessMatches([&](decltype(m_matches)& matches){
+        x = cu::values(matches);
+    });
+    return cu::values(m_matches);
+}
+
+void Matches::clearMatches() {
+    for (auto& x : m_initial) {
+        m_matches.insert(std::make_pair(0, x));
+    }
 }
